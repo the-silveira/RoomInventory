@@ -20,7 +20,7 @@ CREATE TABLE Items (
 );
 
 CREATE TABLE Details (
-    IdDetails INT PRIMARY KEY,
+    IdDetails INT PRIMARY KEY auto_increment,
     DetailsName VARCHAR(75),
     Details VARCHAR(75),
     FK_IdItem VARCHAR(50),
@@ -38,7 +38,7 @@ CREATE TABLE Events (
 );
 
 CREATE TABLE Item_Event (
-    IdIE INT PRIMARY KEY,
+    IdIE INT PRIMARY KEY auto_increment,
     FK_IdEvent VARCHAR(50),
     FK_IdItem VARCHAR(50),
     FOREIGN KEY (FK_IdItem) REFERENCES Items(IdItem),
@@ -232,7 +232,9 @@ INSERT INTO Items (IdItem, ItemName, FK_IdZone) VALUES
 ('VNTO_02', 'Ventoinha', 'Z008'),             -- Chão
 
 -- Palco Items (Lateral Esquerda)
-('TRPL_01', 'Tripla ON/OFF', 'Z010'),             -- Lateral Esquerda
+('TRPL_01', 'Tripla ON/OFF', 'Z010'),         -- Lateral Esquerda
+('PIAN_01', 'Piano Yamaha CPL-154S', 'Z010'), -- Lateral Esquerda
+("CDRB_01", "Cadeira Milenium DT-903", "Z010"),-- Lateral Esquerda
 
 
 -- Corredor Items (Chão)
@@ -1258,4 +1260,117 @@ INSERT INTO Details (IdDetails, DetailsName, Details, FK_IdItem) VALUES
 (763, 'Condição', 'Usado', 'CDRP_03'),
 (764, 'Tamanho', 'Normal', 'CDRP_03'),
 (765, 'Ultima Verificação', '10/4/2024', 'CDRP_03'),
-(766, 'Notas', 'A cadeira está na última fila', 'CDRP_03');
+(766, 'Notas', 'A cadeira está na última fila', 'CDRP_03'),
+
+(767, "Tipo", "Piano", "PIAN_01"),
+(768, "Quantidade", "1", "PIAN_01"),
+(769, "Condição", "Desgastado", "PIAN_01"),
+(770, "Tamanho", "Grande", "PIAN_01"),
+(771, "Ultima Verificação", "2024-04-10", "PIAN_01"),
+(772, "Notas", "Base separada do piano. Cuidado ao transportar", "PIAN_01"),
+
+(773, "Tipo", "Cadeira Bateria", "CDRB_01"),
+(774, "Quantidade", "1", "CDRB_01"),
+(775, "Condição", "Novo", "CDRB_01"),
+(776, "Tamanho", "Normal", "CDRB_01"),
+(777, "Ultima Verificação", "2024-04-10", "CDRB_01"),
+(778, "Notas", "Nada a Apontar", "CDRB_01");
+
+
+
+
+CREATE TABLE Events (
+    IdEvent VARCHAR(50) PRIMARY KEY,
+    EventName VARCHAR(75),
+    EventPlace VARCHAR(75),
+    NameRep VARCHAR(75),
+    EmailRep VARCHAR(75),
+    TecExt VARCHAR(75),
+    Date DATE
+);
+
+CREATE TABLE Item_Event (
+    IdIE INT PRIMARY KEY auto_increment,
+    FK_IdEvent VARCHAR(50),
+    FK_IdItem VARCHAR(50),
+    FOREIGN KEY (FK_IdItem) REFERENCES Items(IdItem),
+    FOREIGN KEY (FK_IdEvent) REFERENCES Events(IdEvent)
+);
+
+INSERT INTO Events VALUES 
+("VCCS_1", "Vila do Conde Comedy Sessions", "Auditório CCO", "Nuno Lacerda, Roberto Correia", "-", "CCO", "2024-09-27"),
+("VCCS_2", "Vila do Conde Comedy Sessions", "Auditório CCO", "Nuno Lacerda, Roberto Correia", "-", "CCO", "2024-10-18"),
+("VCCS_3", "Vila do Conde Comedy Sessions", "Auditório CCO", "Nuno Lacerda, Roberto Correia", "-", "CCO", "2024-11-02"),
+("VCCS_4", "Vila do Conde Comedy Sessions, Matiné de Natal", "Auditório CCO", "Nuno Lacerda, Roberto Correia", "-", "CCO", "2024-12-15"),
+("VCCS_5", "Vila do Conde Comedy Sessions", "Auditório CCO", "Nuno Lacerda, Roberto Correia", "-", "CCO", "2025-01-18"),
+("ORF_01", "Orfeão: Relembrar Itália", "Auditório CCO", "Maestro Samuel Santos", "-", "CCO", "2024-09-29"),
+
+("TEAT_01", "Pandora", "Auditório CCO", "ErrorTeatro", "-", "CCO", "2024-10-12");
+
+
+INSERT INTO Item_Event (FK_IdEvent, FK_IdItem) VALUES
+("VCCS_1", "MSCH_SM58"),
+("VCCS_1", "BNCR"),
+("VCCS_1", "BST_9V_01"),
+("VCCS_1", "XLR3_01"),
+("VCCS_1", "JBLT_01"),
+("VCCS_1", "SPRT_01"),
+("VCCS_1", "PWR_02"),
+("VCCS_1", "TRPL_01"),
+("VCCS_1", "PLTF_01"),
+
+("VCCS_2", "MSCH_SM58"),
+("VCCS_2", "BNCR"),
+("VCCS_2", "BST_9V_01"),
+("VCCS_2", "XLR3_01"),
+("VCCS_2", "JBLT_01"),
+("VCCS_2", "SPRT_01"),
+("VCCS_2", "PWR_02"),
+("VCCS_2", "TRPL_01"),
+("VCCS_2", "PLTF_01"),
+
+("VCCS_3", "MSCH_SM58"),
+("VCCS_3", "BNCR"),
+("VCCS_3", "BST_9V_01"),
+("VCCS_3", "XLR3_01"),
+("VCCS_3", "XLR3_02"),
+("VCCS_3", "JBLT_01"),
+("VCCS_3", "SPRT_01"),
+("VCCS_3", "PWR_02"),
+("VCCS_3", "TRPL_01"),
+("VCCS_3", "PLTF_01"),
+("VCCS_3", "DIBH_01"),
+
+("VCCS_4", "MSCH_SM58"),
+("VCCS_4", "BNCR"),
+("VCCS_4", "BST_9V_01"),
+("VCCS_4", "XLR3_01"),
+("VCCS_4", "SPRT_02"),
+("VCCS_4", "CNST_01"),
+
+("VCCS_5", "MSCH_SM58"),
+("VCCS_5", "MSCH_14A"),
+("VCCS_5", "BNCR"),
+("VCCS_5", "BST_9V_01"),
+("VCCS_5", "XLR3_01"),
+("VCCS_5", "XLR3_02"),
+("VCCS_5", "SPRT_02"),
+("VCCS_5", "CNST_01"),
+("VCCS_5", "DIBH_01");
+
+("ORF_01", "MSCH_SM58"),
+("ORF_01", "BST_9V_01"),
+("ORF_01", "TRPL_01"),
+("ORF_01", "SPRT_02"),
+("ORF_01", "JBST_01"),
+("ORF_01", "PIAN_01"),
+("ORF_01", "CDBR_01"),
+
+("TEAT_01", "SPRT_02"),
+("TEAT_01", "CNST_01"),
+("TEAT_01", "JBST_01"),
+("TEAT_01", "XLR3_16"),
+("TEAT_01", "MSCH_14A"),
+("TEAT_01", "MSCH_SM58"),
+("TEAT_01", "DIBH_01"),
+("TEAT_01", "DIBH_02");

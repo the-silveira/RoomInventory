@@ -13,18 +13,7 @@ class AppDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-            ),
-            child: Text(
-              'MENU',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-          ),
+          ListTile(),
           ListTile(
             leading: Icon(CupertinoIcons.calendar),
             title: Text('Eventos'),
@@ -41,7 +30,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ItensPage()),
+                MaterialPageRoute(builder: (context) => ItemsPage()),
               );
             },
           ),
