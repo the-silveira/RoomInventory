@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../appbar/appbar.dart';
-import '../drawer/drawer.dart';
+import '../appbar/appbar_back.dart';
 
 class EventDetailsPage extends StatefulWidget {
   final String eventId;
@@ -98,8 +97,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MyAppBar(title: 'Event Details'),
-      drawer: AppDrawer(),
+      appBar: AppBarBack(),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : event == null
@@ -119,13 +117,14 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           ),
                           SizedBox(height: 8),
                           Text("📍 ${event!['EventPlace']}"),
-                          Text("👤 ${event!['NameRep']} - 📧 ${event!['EmailRep']}"),
+                          Text("👤 ${event!['NameRep']}"),
+                          Text("📧 ${event!['EmailRep']}"),
                           Text("🛠 ${event!['TecExt']}"),
                           Text("📅 Date: ${event!['Date']}"),
                           Divider(thickness: 2, height: 20),
                           Text(
-                            "Associated Items",
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            "Itens Associados",
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -149,16 +148,12 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                     textAlign: TextAlign.left, // Align the subtitle to the left
                                   ),
                                   leading: Icon(
-                                    Icons.inventory,
+                                    CupertinoIcons.cube_box,
                                     color: Colors.blue,
                                   ),
                                   children: [
                                     ListTile(
                                       contentPadding: EdgeInsets.symmetric(horizontal: 20),
-                                      title: Text(
-                                        "Details: ",
-                                        textAlign: TextAlign.left, // Align the title to the left
-                                      ),
                                       subtitle: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: (item['DetailsList'] as List<dynamic>)
@@ -175,12 +170,14 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                     ListTile(
                                       contentPadding: EdgeInsets.symmetric(horizontal: 20), // Remove padding inside ListTile
                                       title: Text(
-                                        "Place: ${item['PlaceName']}",
-                                        textAlign: TextAlign.left, // Align the subtitle to the left
+                                        "Localização: ${item['PlaceName']}",
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(fontSize: 15), // Align the subtitle to the left
                                       ),
                                       subtitle: Text(
-                                        "Zone: ${item['ZoneName']}",
-                                        textAlign: TextAlign.left, // Align the title to the left
+                                        "Zona: ${item['ZoneName']}",
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(fontSize: 12), // Align the title to the left
                                       ),
                                     ),
                                   ],
