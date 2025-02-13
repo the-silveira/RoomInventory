@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../appbar/appbar.dart'; // Import the MyAppBar widget
+import '../appbar/appbar.dart';
 import '../drawer/drawer.dart';
 
 class LocaisPage extends StatefulWidget {
@@ -11,22 +11,18 @@ class LocaisPage extends StatefulWidget {
 }
 
 class _LocaisPageState extends State<LocaisPage> {
-  // Variable to store the list of places, zones, items, and details
   dynamic places;
-  List<dynamic> filteredPlaces = []; // For search functionality
-  TextEditingController searchController = TextEditingController(); // Controller for search bar
+  dynamic filteredPlaces = [];
+  TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Fetch data when the widget is initialized
     _fetchData();
   }
 
-  // Function to fetch data from the API
   Future<void> _fetchData() async {
     try {
-      // Fetch data for places, zones, items, and details
       var response = await http.post(
         Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {'query_param': 'P2'},
@@ -34,9 +30,6 @@ class _LocaisPageState extends State<LocaisPage> {
 
       if (response.statusCode == 200) {
         List<dynamic> rawData = json.decode(response.body);
-        print(rawData);
-
-        // Group data by Place, Zone, Item, and Details
         Map<String, dynamic> groupedData = {};
 
         for (var row in rawData) {
@@ -49,7 +42,6 @@ class _LocaisPageState extends State<LocaisPage> {
           String detailsName = row['DetailsName'];
           String detailsValue = row['Details'];
 
-          // Initialize place if not already in the map
           if (!groupedData.containsKey(idPlace)) {
             groupedData[idPlace] = {
               'PlaceName': placeName,
@@ -57,7 +49,6 @@ class _LocaisPageState extends State<LocaisPage> {
             };
           }
 
-          // Initialize zone if not already in the place
           if (!groupedData[idPlace]['Zones'].containsKey(idZone)) {
             groupedData[idPlace]['Zones'][idZone] = {
               'ZoneName': zoneName,
@@ -65,7 +56,6 @@ class _LocaisPageState extends State<LocaisPage> {
             };
           }
 
-          // Initialize item if not already in the zone
           if (!groupedData[idPlace]['Zones'][idZone]['Items'].containsKey(idItem)) {
             groupedData[idPlace]['Zones'][idZone]['Items'][idItem] = {
               'IdItem': idItem,
@@ -74,7 +64,6 @@ class _LocaisPageState extends State<LocaisPage> {
             };
           }
 
-          // Add details to the item
           groupedData[idPlace]['Zones'][idZone]['Items'][idItem]['Details'].add({
             'DetailsName': detailsName,
             'Details': detailsValue,
@@ -84,7 +73,6 @@ class _LocaisPageState extends State<LocaisPage> {
         setState(() {
           places = groupedData.values.toList();
           filteredPlaces = places;
-          print(filteredPlaces); // Initialize filteredPlaces with all places
         });
       }
     } catch (e) {
@@ -95,38 +83,97 @@ class _LocaisPageState extends State<LocaisPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Use MyAppBar here
       appBar: MyAppBar(
         title: 'Locais',
-        icon: 'Drawer', // Use 'Drawer' to show the drawer icon
+        icon: 'Drawer',
       ),
-      drawer: AppDrawer(), // Include the drawer
+      drawer: AppDrawer(),
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: CupertinoSearchTextField(
                 controller: searchController,
                 onChanged: (value) {
                   setState(() {
-                    filteredPlaces = places.where((place) => place['PlaceName'].toLowerCase().contains(value.toLowerCase())).toList();
+                    if (value.isEmpty) {
+                      // If the search query is empty, show all places
+                      filteredPlaces = places;
+                    } else {
+                      // Filter places based on the search query
+                      filteredPlaces = places
+                          .map((place) {
+                            // Filter zones within the place
+                            var filteredZones = place['Zones']
+                                .entries
+                                .map((zoneEntry) {
+                                  var zone = zoneEntry.value;
+
+                                  // Filter items within the zone
+                                  var filteredItems = zone['Items'].entries.where((itemEntry) {
+                                    var item = itemEntry.value;
+
+                                    // Check if the search query matches ItemName or IdItem
+                                    return item['ItemName'].toLowerCase().contains(value.toLowerCase()) || item['IdItem'].toLowerCase().contains(value.toLowerCase());
+                                  }).toList();
+
+                                  // Check if the search query matches ZoneName
+                                  if (zone['ZoneName'].toLowerCase().contains(value.toLowerCase())) {
+                                    // Include all items in the zone if the zone matches
+                                    filteredItems = zone['Items'].entries.toList();
+                                  }
+
+                                  // Return the zone only if it has matching items or its name matches
+                                  if (filteredItems.isNotEmpty) {
+                                    return MapEntry(
+                                      zoneEntry.key,
+                                      {
+                                        ...zone,
+                                        'Items': Map.fromEntries(filteredItems),
+                                      },
+                                    );
+                                  }
+                                  return null;
+                                })
+                                .where((zone) => zone != null)
+                                .toList();
+
+                            // Explicitly cast filteredZones to List<MapEntry<dynamic, dynamic>>
+                            var filteredZonesMap = Map.fromEntries(filteredZones.cast<MapEntry<dynamic, dynamic>>());
+
+                            // Check if the search query matches PlaceName
+                            if (place['PlaceName'].toLowerCase().contains(value.toLowerCase())) {
+                              // Include all zones in the place if the place matches
+                              filteredZonesMap = place['Zones'];
+                            }
+
+                            // Return the place only if it has matching zones or its name matches
+                            if (filteredZonesMap.isNotEmpty) {
+                              return {
+                                ...place,
+                                'Zones': filteredZonesMap,
+                              };
+                            }
+                            return null;
+                          })
+                          .where((place) => place != null)
+                          .toList();
+                    }
                   });
                 },
               ),
             ),
-            // List of Places
             Expanded(
               child: places == null
-                  ? Center(child: CupertinoActivityIndicator()) // Show loading indicator
+                  ? Center(child: CupertinoActivityIndicator())
                   : filteredPlaces.isEmpty
                       ? Center(
                           child: Text(
-                            "No places found.",
+                            "No items found.",
                             style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 20),
                           ),
-                        ) // Show message if no places match the search
+                        )
                       : ListView.builder(
                           itemCount: filteredPlaces.length,
                           itemBuilder: (context, placeIndex) {
@@ -140,7 +187,6 @@ class _LocaisPageState extends State<LocaisPage> {
                                 ),
                               ),
                               children: [
-                                // List of Zones in the Place
                                 ...place['Zones'].entries.map((zoneEntry) {
                                   var zone = zoneEntry.value;
                                   return CupertinoListSection.insetGrouped(
@@ -152,7 +198,6 @@ class _LocaisPageState extends State<LocaisPage> {
                                       ),
                                     ),
                                     children: [
-                                      // List of Items in the Zone
                                       ...zone['Items'].entries.map((itemEntry) {
                                         var item = itemEntry.value;
                                         return CupertinoListTile(
@@ -163,7 +208,6 @@ class _LocaisPageState extends State<LocaisPage> {
                                           ),
                                           trailing: Icon(CupertinoIcons.chevron_forward),
                                           onTap: () {
-                                            // Show details in a modal
                                             showCupertinoModalPopup(
                                               context: context,
                                               builder: (context) {
