@@ -82,13 +82,11 @@ class _LocaisPageState extends State<LocaisPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: MyAppBar(
+    return CupertinoPageScaffold(
+      navigationBar: CustomNavigationBar(
         title: 'Locais',
-        icon: 'Drawer',
       ),
-      drawer: AppDrawer(),
-      body: SafeArea(
+      child: SafeArea(
         child: Column(
           children: [
             Padding(
@@ -181,10 +179,7 @@ class _LocaisPageState extends State<LocaisPage> {
                             return CupertinoListSection(
                               header: Text(
                                 place['PlaceName'] ?? 'Unknown Place',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).colorScheme.onSurface),
                               ),
                               children: [
                                 ...place['Zones'].entries.map((zoneEntry) {
@@ -192,19 +187,16 @@ class _LocaisPageState extends State<LocaisPage> {
                                   return CupertinoListSection.insetGrouped(
                                     header: Text(
                                       zone['ZoneName'] ?? 'Unknown Zone',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                     ),
                                     children: [
                                       ...zone['Items'].entries.map((itemEntry) {
                                         var item = itemEntry.value;
                                         return CupertinoListTile(
-                                          title: Text(item['ItemName'] ?? 'Unknown Item', style: TextStyle(fontSize: 14)),
+                                          title: Text(item['ItemName'] ?? 'Unknown Item', style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
                                           subtitle: Text(
                                             "ID: ${item['IdItem']}",
-                                            style: TextStyle(fontSize: 12),
+                                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary),
                                           ),
                                           trailing: Icon(CupertinoIcons.chevron_forward),
                                           onTap: () {
@@ -212,10 +204,13 @@ class _LocaisPageState extends State<LocaisPage> {
                                               context: context,
                                               builder: (context) {
                                                 return CupertinoActionSheet(
-                                                  title: Text(item['ItemName'] ?? 'Unknown Item'),
+                                                  title: Text(
+                                                    item['ItemName'] ?? 'Unknown Item',
+                                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                                  ),
                                                   message: Text(
                                                     "ID: ${item['IdItem']}\n\nDetails:",
-                                                    style: TextStyle(fontSize: 14),
+                                                    style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.primary),
                                                   ),
                                                   actions: [
                                                     ...item['Details'].map((detail) {

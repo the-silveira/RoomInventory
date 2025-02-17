@@ -1,41 +1,32 @@
+// custom_navigation_bar.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title, icon;
+class CustomNavigationBar extends StatelessWidget implements ObstructingPreferredSizeWidget {
+  final String title;
 
-  const MyAppBar({Key? key, required this.title, required this.icon}) : super(key: key);
+  const CustomNavigationBar({
+    Key? key,
+    required this.title,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return CupertinoNavigationBar(
       middle: Text(
         title,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
-      leading: icon == "Drawer"
-          ? CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.bars),
-              onPressed: () {
-                // Open the drawer
-                Scaffold.of(context).openDrawer();
-              },
-            )
-          : CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.back),
-              onPressed: () {
-                // Navigate back
-                Navigator.of(context).pop();
-              },
-            ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      previousPageTitle: "Inventário CCO", // This will appear if the page is not the root
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+
+  @override
+  bool shouldFullyObstruct(BuildContext context) {
+    return true;
+  }
 }

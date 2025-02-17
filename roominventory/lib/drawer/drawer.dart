@@ -1,49 +1,118 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import '/eventos/eventos.dart'; // Import Cupertino icons
+import '/eventos/eventos.dart';
 import '/itens/itens.dart';
 import '/locais/locais.dart';
+import '/definicoes/definicoes.dart';
 
-class AppDrawer extends StatelessWidget {
-  const AppDrawer({Key? key}) : super(key: key);
+import 'package:flutter/material.dart';
 
+class OptionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          ListTile(),
-          ListTile(
-            leading: Icon(CupertinoIcons.calendar),
-            title: Text('Eventos'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EventosPage()),
-              );
-            },
+    return CupertinoPageScaffold(
+      child: CustomScrollView(
+        slivers: <Widget>[
+          // Large title navigation bar
+          CupertinoSliverNavigationBar(
+            largeTitle: Text(
+              "Inventário CCO",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
           ),
-          ListTile(
-            leading: Icon(CupertinoIcons.cube_box),
-            title: Text('Itens'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ItemsPage()),
-              );
-            },
+
+          // First Section: Navigation
+          SliverToBoxAdapter(
+            child: CupertinoListSection.insetGrouped(
+              children: [
+                CupertinoListTile.notched(
+                  title: Text(
+                    'Eventos',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  leading: Icon(
+                    CupertinoIcons.calendar,
+                    color: CupertinoColors.systemBlue,
+                  ),
+                  trailing: CupertinoListTileChevron(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (context) => EventosPage()),
+                    );
+                  },
+                ),
+                CupertinoListTile.notched(
+                  title: Text(
+                    'Itens',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  leading: Icon(
+                    CupertinoIcons.cube_box_fill,
+                    color: CupertinoColors.systemBlue,
+                  ),
+                  trailing: CupertinoListTileChevron(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (context) => ItemsPage()),
+                    );
+                  },
+                ),
+                CupertinoListTile.notched(
+                  title: Text(
+                    'Locais',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  leading: Icon(
+                    CupertinoIcons.map_fill,
+                    color: CupertinoColors.systemBlue,
+                  ),
+                  trailing: CupertinoListTileChevron(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (context) => LocaisPage()),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-          ListTile(
-            leading: Icon(CupertinoIcons.map_pin),
-            title: Text('Locais'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LocaisPage()),
-              );
-            },
+
+          // Second Section: Preferences
+          SliverToBoxAdapter(
+            child: CupertinoListSection.insetGrouped(
+              children: [
+                CupertinoListTile.notched(
+                  title: Text(
+                    'Definições',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                  leading: Icon(
+                    CupertinoIcons.settings,
+                    color: CupertinoColors.systemBlue,
+                  ),
+                  trailing: CupertinoListTileChevron(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (context) => SettingsPage()),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
+
+          // Third Section: About
         ],
       ),
     );
