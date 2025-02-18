@@ -1,13 +1,15 @@
-// custom_navigation_bar.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustomNavigationBar extends StatelessWidget implements ObstructingPreferredSizeWidget {
-  final String title;
+  final String title, previousPageTitle;
+  final VoidCallback? onAddPressed; // Callback for the add button
 
   const CustomNavigationBar({
     Key? key,
     required this.title,
+    required this.previousPageTitle,
+    this.onAddPressed, // Optional callback for the add button
   }) : super(key: key);
 
   @override
@@ -18,7 +20,17 @@ class CustomNavigationBar extends StatelessWidget implements ObstructingPreferre
         style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
       backgroundColor: Theme.of(context).colorScheme.surface,
-      previousPageTitle: "Inventário CCO", // This will appear if the page is not the root
+      previousPageTitle: previousPageTitle, // This will appear if the page is not the root
+      trailing: onAddPressed != null
+          ? CupertinoButton(
+              padding: EdgeInsets.zero, // Remove default padding
+              onPressed: onAddPressed, // Call the callback when the button is pressed
+              child: Icon(
+                CupertinoIcons.add, // Use the Cupertino add icon
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            )
+          : null,
     );
   }
 

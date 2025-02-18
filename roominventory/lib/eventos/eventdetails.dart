@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:roominventory/appbar/appbar.dart';
 import 'dart:convert';
 
 import '../appbar/appbar_back.dart';
@@ -16,8 +17,9 @@ class EventDetailsPage extends StatefulWidget {
 
 class _EventDetailsPageState extends State<EventDetailsPage> {
   dynamic event;
-  dynamic items;
+  List<dynamic> items = [];
   bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -44,7 +46,15 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
           setState(() {
             event = selectedEvent;
           });
+        } else {
+          setState(() {
+            errorMessage = 'Event not found';
+          });
         }
+      } else {
+        setState(() {
+          errorMessage = 'Failed to load event details';
+        });
       }
 
       // Fetch item details for this event
@@ -84,9 +94,15 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         setState(() {
           items = groupedItems.values.toList();
         });
+      } else {
+        setState(() {
+          errorMessage = 'Failed to load item details';
+        });
       }
     } catch (e) {
-      print('Exception: $e');
+      setState(() {
+        errorMessage = 'Exception: $e';
+      });
     } finally {
       setState(() {
         isLoading = false;
@@ -96,96 +112,132 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarBack(),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : event == null
-              ? Center(child: Text('No event details found'))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Event details in a scrollable view
-                    SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event!['EventName'] ?? 'No Name',
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return CupertinoPageScaffold(
+      navigationBar: CustomNavigationBar(
+        title: 'Relatório',
+        previousPageTitle: 'Eventos',
+      ),
+      child: isLoading
+          ? Center(child: CupertinoActivityIndicator())
+          : errorMessage.isNotEmpty
+              ? Center(child: Text(errorMessage))
+              : Scaffold(
+                  body: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                event!['EventName'] ?? 'No Name',
+                                style: CupertinoTheme.of(context).textTheme.navTitleTextStyle,
+                              ),
+                              SizedBox(height: 8),
+                              Text("📍 ${event!['EventPlace']}"),
+                              Text("👤 ${event!['NameRep']}"),
+                              Text("📧 ${event!['EmailRep']}"),
+                              Text("🛠 ${event!['TecExt']}"),
+                              Text("📅 Date: ${event!['Date']}"),
+                            ],
                           ),
-                          SizedBox(height: 8),
-                          Text("📍 ${event!['EventPlace']}"),
-                          Text("👤 ${event!['NameRep']}"),
-                          Text("📧 ${event!['EmailRep']}"),
-                          Text("🛠 ${event!['TecExt']}"),
-                          Text("📅 Date: ${event!['Date']}"),
-                          Divider(thickness: 2, height: 20),
-                          Text(
-                            "Itens Associados",
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
+                        ),
+                        // Scrollable List of Items
+                        items.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Text(
+                                    "Não tem Itens Registados",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : SingleChildScrollView(
+                                child: CupertinoListSection.insetGrouped(
+                                header: Text(
+                                  "Todos os Itens",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                                  ),
+                                ),
+                                children: [
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: items.length,
+                                    itemBuilder: (context, index) {
+                                      var item = items[index];
+                                      return CupertinoListTile(
+                                        title: Text(
+                                          item['ItemName'] ?? 'Unknown Item',
+                                        ),
+                                        subtitle: Text(
+                                          "ID: ${item['IdItem']}",
+                                        ),
+                                        leading: Icon(
+                                          CupertinoIcons.cube_box,
+                                          color: CupertinoColors.activeBlue,
+                                        ),
+                                        trailing: CupertinoListTileChevron(),
+                                        onTap: () {
+                                          showCupertinoModalPopup(
+                                            context: context,
+                                            builder: (context) {
+                                              return CupertinoActionSheet(
+                                                title: Text(
+                                                  item['ItemName'] ?? 'Unknown Item',
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).colorScheme.onSurface,
+                                                  ),
+                                                ),
+                                                message: Text(
+                                                  "ID: ${item['IdItem']}\n\nDetails:",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Theme.of(context).colorScheme.primary,
+                                                  ),
+                                                ),
+                                                actions: [
+                                                  ...item['DetailsList'].map<CupertinoActionSheetAction>((detail) {
+                                                    return CupertinoActionSheetAction(
+                                                      child: Text(
+                                                        "${detail['DetailsName']}: ${detail['Details']}",
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Theme.of(context).colorScheme.primary,
+                                                        ),
+                                                      ),
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                    );
+                                                  }).toList(),
+                                                ],
+                                                cancelButton: CupertinoActionSheetAction(
+                                                  child: Text('Close'),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              )),
+                      ],
                     ),
-                    // Scrollable list of associated items
-                    Expanded(
-                      child: items.isEmpty
-                          ? Center(child: Text("No items associated with this event."))
-                          : ListView.builder(
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                var item = items[index];
-
-                                return ExpansionTile(
-                                  title: Text(
-                                    item['ItemName'] ?? 'Unknown Item',
-                                    textAlign: TextAlign.left, // Align the title to the left
-                                  ),
-                                  subtitle: Text(
-                                    "ID: ${item['IdItem']}",
-                                    textAlign: TextAlign.left, // Align the subtitle to the left
-                                  ),
-                                  leading: Icon(
-                                    CupertinoIcons.cube_box,
-                                    color: Colors.blue,
-                                  ),
-                                  children: [
-                                    ListTile(
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 20),
-                                      subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: (item['DetailsList'] as List<dynamic>)
-                                            .map<Widget>(
-                                              (detail) => Text(
-                                                "${detail['DetailsName']}: ${detail['Details']}",
-                                                textAlign: TextAlign.left,
-                                                style: TextStyle(fontSize: 12), // Align each detail to the left
-                                              ),
-                                            )
-                                            .toList(),
-                                      ),
-                                    ),
-                                    ListTile(
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 20), // Remove padding inside ListTile
-                                      title: Text(
-                                        "Localização: ${item['PlaceName']}",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(fontSize: 15), // Align the subtitle to the left
-                                      ),
-                                      subtitle: Text(
-                                        "Zona: ${item['ZoneName']}",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(fontSize: 12), // Align the title to the left
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                    )
-                  ],
+                  ),
                 ),
     );
   }

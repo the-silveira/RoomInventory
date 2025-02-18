@@ -85,6 +85,7 @@ class _LocaisPageState extends State<LocaisPage> {
     return CupertinoPageScaffold(
       navigationBar: CustomNavigationBar(
         title: 'Locais',
+        previousPageTitle: 'Inventário',
       ),
       child: SafeArea(
         child: Column(
@@ -166,10 +167,15 @@ class _LocaisPageState extends State<LocaisPage> {
               child: places == null
                   ? Center(child: CupertinoActivityIndicator())
                   : filteredPlaces.isEmpty
-                      ? Center(
-                          child: Text(
-                            "No items found.",
-                            style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 20),
+                      ? Scaffold(
+                          body: Center(
+                            child: Text(
+                              "Não tem Eventos Registados",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                              ),
+                            ),
                           ),
                         )
                       : ListView.builder(
