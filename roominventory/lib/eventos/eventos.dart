@@ -14,6 +14,10 @@ class EventosPage extends StatefulWidget {
 
 class _EventosPageState extends State<EventosPage> {
   dynamic events = [];
+  dynamic filteredEvents = []; // List for search results
+  TextEditingController searchController = TextEditingController(); // Search controller
+  bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -32,32 +36,47 @@ class _EventosPageState extends State<EventosPage> {
       if (response.statusCode == 200) {
         setState(() {
           events = json.decode(response.body);
+          filteredEvents = events; // Initialize filtered list with all events
         });
       } else {
         print('Failed to fetch data: ${response.statusCode}');
       }
     } catch (e) {
       print('Exception: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
+  void _filterItems(String query) {
+    if (events == null) return;
+
+    setState(() {
+      filteredEvents = events!.where((item) {
+        return item['IdEvent'].toLowerCase().contains(query.toLowerCase()) || item['EventName'].toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
   // Function to determine card background color
-  Color _getCardColor(String eventDate) {
+  IconData _getCardColor(String eventDate) {
     try {
       DateTime eventDateTime = DateFormat("yyyy-MM-dd").parse(eventDate);
       DateTime today = DateTime.now();
       DateTime todayOnly = DateTime(today.year, today.month, today.day);
 
       if (eventDateTime.isBefore(todayOnly)) {
-        return CupertinoColors.systemGrey; // Past event (Grey)
+        return CupertinoIcons.checkmark_alt;
       } else if (eventDateTime.isAtSameMomentAs(todayOnly)) {
-        return CupertinoColors.systemBlue; // Today's event (Blue)
+        return CupertinoIcons.exclamationmark_octagon;
       } else {
-        return CupertinoColors.systemGreen; // Future event (Green)
+        return CupertinoIcons.add;
       }
     } catch (e) {
       print("Date parsing error: $e");
-      return CupertinoColors.systemGrey;
+      return CupertinoIcons.checkmark_alt;
     }
   }
 
@@ -66,112 +85,140 @@ class _EventosPageState extends State<EventosPage> {
     return CupertinoPageScaffold(
       navigationBar: CustomNavigationBar(
         title: 'Eventos',
+        previousPageTitle: 'Inventário',
       ),
-      child: events.toString().isEmpty || events == null
-          ? Center(child: CupertinoActivityIndicator()) // Show Cupertino loader
-          : events != 0
-              ? ListView.builder(
-                  itemCount: events.length,
-                  itemBuilder: (context, index) {
-                    var event = events[index];
-                    Color cardColor = _getCardColor(event['Date']);
+      child: isLoading
+          ? Center(child: CupertinoActivityIndicator())
+          : errorMessage.isNotEmpty
+              ? Center(child: Text(errorMessage))
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CupertinoSearchTextField(
+                        controller: searchController,
+                        onChanged: _filterItems,
+                        placeholder: 'Search items...',
+                      ),
+                    ),
+                    Expanded(
+                      child: filteredEvents.isEmpty
+                          ? Scaffold(
+                              body: Center(
+                                child: Text(
+                                  "Não tem Eventos Registados",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              child: CupertinoListSection(
+                                header: Text(
+                                  "Todos os Eventos",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                                  ),
+                                ),
+                                children: filteredEvents.map<Widget>((event) {
+                                  // Corrected mapping to List<Widget>
 
-                    return CupertinoListSection.insetGrouped(
-                      children: [
-                        CupertinoListTile.notched(
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: cardColor.withOpacity(0.2), // Subtle background color
-                              borderRadius: BorderRadius.circular(20), // Circular shape
-                            ),
-                            child: Icon(
-                              CupertinoIcons.calendar,
-                              color: cardColor,
-                              size: 20,
-                            ),
-                          ),
-                          title: Padding(
-                            padding: EdgeInsets.only(bottom: 4), // Add padding below the title
-                            child: Text(
-                              event['EventName'] ?? 'No Name',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                  return CupertinoListSection.insetGrouped(
+                                    children: [
+                                      CupertinoListTile.notched(
+                                        title: Row(
+                                          children: [
+                                            Text(
+                                              event['EventName'].toString().isEmpty
+                                                  ? 'Empty Name'
+                                                  : event['EventName'].toString().length > 35
+                                                      ? event['EventName'].toString().substring(0, 35) + "..."
+                                                      : event['EventName'],
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Icon(_getCardColor(event['Date']))
+                                          ],
+                                        ),
+                                        subtitle: Padding(
+                                          padding: EdgeInsets.only(bottom: 10), // Add padding above the subtitle
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "📍 ${event['EventPlace']}",
+                                                style: TextStyle(
+                                                  color: CupertinoColors.secondaryLabel,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              SizedBox(height: 2), // Add spacing between lines
+                                              Text(
+                                                "👤 ${event['NameRep']}",
+                                                style: TextStyle(
+                                                  color: CupertinoColors.secondaryLabel,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                "📧 ${event['EmailRep']}",
+                                                style: TextStyle(
+                                                  color: CupertinoColors.secondaryLabel,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                "🛠 ${event['TecExt']}",
+                                                style: TextStyle(
+                                                  color: CupertinoColors.secondaryLabel,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                "📅 Date: ${event['Date']}",
+                                                style: TextStyle(
+                                                  color: CupertinoColors.secondaryLabel,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                "ID: ${event['IdEvent']}",
+                                                style: TextStyle(
+                                                  color: CupertinoColors.secondaryLabel,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        trailing: CupertinoListTileChevron(),
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            CupertinoPageRoute(
+                                              builder: (context) => EventDetailsPage(eventId: event['IdEvent']),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                }).toList(), // Make sure this is List<Widget>
                               ),
                             ),
-                          ),
-                          subtitle: Padding(
-                            padding: EdgeInsets.only(top: 4), // Add padding above the subtitle
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "📍 ${event['EventPlace']}",
-                                  style: TextStyle(
-                                    color: CupertinoColors.secondaryLabel,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 2), // Add spacing between lines
-                                Text(
-                                  "👤 ${event['NameRep']}",
-                                  style: TextStyle(
-                                    color: CupertinoColors.secondaryLabel,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 2), // Add spacing between lines
-                                Text(
-                                  "📧 ${event['EmailRep']}",
-                                  style: TextStyle(
-                                    color: CupertinoColors.secondaryLabel,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 2), // Add spacing between lines
-                                Text(
-                                  "🛠 ${event['TecExt']}",
-                                  style: TextStyle(
-                                    color: CupertinoColors.secondaryLabel,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 2), // Add spacing between lines
-                                Text(
-                                  "📅 Date: ${event['Date']}",
-                                  style: TextStyle(
-                                    color: CupertinoColors.secondaryLabel,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 2), // Add spacing between lines
-                                Text(
-                                  "ID: ${event['IdEvent']}",
-                                  style: TextStyle(
-                                    color: CupertinoColors.secondaryLabel,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          trailing: CupertinoListTileChevron(),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              CupertinoPageRoute(
-                                builder: (context) => EventDetailsPage(eventId: event['IdEvent']),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                )
-              : Center(child: Text("Não tem Eventos Registados")),
+                    ),
+                  ],
+                ),
     );
   }
 }

@@ -13,6 +13,7 @@ class SettingsPage extends StatelessWidget {
     return CupertinoPageScaffold(
       navigationBar: CustomNavigationBar(
         title: 'Definições',
+        previousPageTitle: 'Inventário CCO',
       ),
       child: ListView(
         children: <Widget>[

@@ -15,7 +15,7 @@ class OptionsPage extends StatelessWidget {
           // Large title navigation bar
           CupertinoSliverNavigationBar(
             largeTitle: Text(
-              "Inventário CCO",
+              "Inventário",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
