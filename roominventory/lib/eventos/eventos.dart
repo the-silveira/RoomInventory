@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:roominventory/eventos/eventdetails.dart';
 import '../appbar/appbar.dart';
-import '../drawer/drawer.dart';
 
 class EventosPage extends StatefulWidget {
   @override
