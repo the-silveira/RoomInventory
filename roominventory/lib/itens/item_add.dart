@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -68,68 +69,69 @@ class _AddItemPageState extends State<AddItemPage> {
   }
 
   Future<void> _saveItem() async {
-    print("Saving item...");
-    print(selectedZone);
-    /*
+    _detailsList.add({'Marca': _marcaController.text, 'Tipo': _tipoController.text, 'Quantidade': _quantidadeController.text, 'Condição': _condicaoController.text, 'Tamanho': _tamanhoController.text, 'Ultima Verificação': _ultimaVerificacaoController.text});
+
     try {
       var response = await http.post(
         Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {
           'query_param': 'I2',
           'IdItem': _idItemController.text,
-          'ItemName': _itemNameController,
+          'ItemName': _itemNameController.text,
           'FK_IdZone': selectedZone,
         },
       );
-      if (response.statusCode == 200) {
-        setState(() {
-          places = json.decode(response.body);
-        });
-      }
-
-      response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'Z1'},
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          zones = json.decode(response.body);
-          filteredZones = zones;
-        });
+      if (json.decode(response.body)['status'].toString() == 'success') {
+        for (var detail in _detailsList) {
+          detail.forEach((key, value) async {
+            await http.post(
+              Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+              body: {
+                'query_param': 'D1',
+                'DetailsName': key,
+                'Details': value,
+                'FK_IdItem': _idItemController.text,
+              },
+            );
+          });
+        }
+        for (var input in _dynamicInputs) {
+          await http.post(
+            Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+            body: {
+              'query_param': 'D1',
+              'DetailsName': input['detalhe']!.text,
+              'Details': input['detalheName']!.text,
+              'FK_IdItem': _idItemController.text,
+            },
+          );
+        }
+        _showMessage("Item Guardado com Sucesso", json.decode(response.body)['status'].toString());
+      } else {
+        _showMessage("ID do Item já existe. Tente novamente", json.decode(response.body)['status'].toString());
       }
     } catch (e) {
-      print('Exception: $e');
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      _showMessage("Erro Inseperado. Tente novamente", 'error');
     }
-    */
   }
 
-  void _addDetail() {
-    final detail = {
-      'Marca': _marcaController.text.trim(),
-      'Condicao': _condicaoController.text.trim(),
-      'Quantidade': _quantidadeController.text.trim(),
-      'Tamanho': _tamanhoController.text.trim(),
-      'Tipo': _tipoController.text.trim(),
-      'Ultima Verificacao': _ultimaVerificacaoController.text.trim(),
-    };
-
-    if (detail.values.every((value) => value.isNotEmpty)) {
-      setState(() {
-        _detailsList.add(detail);
-        _marcaController.clear();
-        _condicaoController.clear();
-        _quantidadeController.clear();
-        _tamanhoController.clear();
-        _tipoController.clear();
-        _ultimaVerificacaoController.clear();
-      });
-    } else {
-      _showErrorDialog('Please fill all detail fields.');
-    }
+  void _showMessage(String message, status) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(status == 'success' ? 'Sucesso' : 'Erro'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            child: Text('OK'),
+            onPressed: () => {
+              Navigator.pop(context),
+              status == 'success' ? Navigator.pop(context) : null,
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   void _filterZones(String? placeId) {
@@ -152,22 +154,6 @@ class _AddItemPageState extends State<AddItemPage> {
     setState(() {
       _dynamicInputs.removeAt(index);
     });
-  }
-
-  void _showErrorDialog(String message) {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            child: Text('OK'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showPlacePicker() {
@@ -374,14 +360,6 @@ class _AddItemPageState extends State<AddItemPage> {
                         ),
                       ],
                     ),
-
-                    // Save Button
-                    SizedBox(height: 20),
-                    CupertinoButton.filled(
-                      child: Text('Save Item'),
-                      onPressed: _saveItem,
-                    ),
-                    SizedBox(height: 20),
                   ],
                 ),
               ),
