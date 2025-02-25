@@ -22,7 +22,12 @@ class AddNavigationBar extends StatelessWidget implements ObstructingPreferredSi
       backgroundColor: Theme.of(context).colorScheme.surface,
       previousPageTitle: previousPageTitle, // This will appear if the page is not the root
       trailing: CupertinoButton(
-        child: Text('Save'),
+        padding: EdgeInsets.zero, // Remove default padding
+        minSize: 0, // Set minSize to 0 to avoid default constraints
+        child: Text(
+          'Save',
+        ),
+
         onPressed: onAddPressed,
       ),
     );

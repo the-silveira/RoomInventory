@@ -131,16 +131,32 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                event!['EventName'] ?? 'No Name',
-                                style: CupertinoTheme.of(context).textTheme.navTitleTextStyle,
-                              ),
+                              Text(event!['EventName'] ?? 'No Name',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  )),
                               SizedBox(height: 8),
-                              Text("📍 ${event!['EventPlace']}"),
-                              Text("👤 ${event!['NameRep']}"),
-                              Text("📧 ${event!['EmailRep']}"),
-                              Text("🛠 ${event!['TecExt']}"),
-                              Text("📅 Date: ${event!['Date']}"),
+                              Text(
+                                "📍 ${event!['EventPlace']}",
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
+                              Text(
+                                "👤 ${event!['NameRep']}",
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
+                              Text(
+                                "📧 ${event!['EmailRep']}",
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
+                              Text(
+                                "🛠 ${event!['TecExt']}",
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
+                              Text(
+                                "📅 Date: ${event!['Date']}",
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              ),
                             ],
                           ),
                         ),
@@ -151,10 +167,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                   padding: const EdgeInsets.all(16.0),
                                   child: Text(
                                     "Não tem Itens Registados",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: CupertinoTheme.of(context).textTheme.textStyle.color,
-                                    ),
+                                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                   ),
                                 ),
                               )
@@ -162,11 +175,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                 child: CupertinoListSection.insetGrouped(
                                 header: Text(
                                   "Todos os Itens",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                    color: CupertinoTheme.of(context).textTheme.textStyle.color,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                 ),
                                 children: [
                                   ListView.builder(
@@ -177,13 +186,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                       return CupertinoListTile(
                                         title: Text(
                                           item['ItemName'] ?? 'Unknown Item',
+                                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                                         ),
                                         subtitle: Text(
                                           "ID: ${item['IdItem']}",
-                                        ),
-                                        leading: Icon(
-                                          CupertinoIcons.cube_box,
-                                          color: CupertinoColors.activeBlue,
+                                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
                                         ),
                                         trailing: CupertinoListTileChevron(),
                                         onTap: () {
@@ -193,9 +200,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                               return CupertinoActionSheet(
                                                 title: Text(
                                                   item['ItemName'] ?? 'Unknown Item',
-                                                  style: TextStyle(
-                                                    color: Theme.of(context).colorScheme.onSurface,
-                                                  ),
+                                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                                                 ),
                                                 message: Text(
                                                   "ID: ${item['IdItem']}\n\nDetails:",
