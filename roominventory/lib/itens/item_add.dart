@@ -161,7 +161,7 @@ class _AddItemPageState extends State<AddItemPage> {
       context: context,
       builder: (context) => Container(
         height: 300,
-        color: CupertinoColors.systemBackground,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         child: Column(
           children: [
             Row(
@@ -186,7 +186,12 @@ class _AddItemPageState extends State<AddItemPage> {
                     _filterZones(selectedPlace);
                   });
                 },
-                children: places.map((place) => Text(place['PlaceName'])).toList(),
+                children: places
+                    .map((place) => Text(
+                          place['PlaceName'],
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        ))
+                    .toList(),
               ),
             ),
           ],
@@ -200,7 +205,7 @@ class _AddItemPageState extends State<AddItemPage> {
       context: context,
       builder: (context) => Container(
         height: 300,
-        color: CupertinoColors.systemBackground,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         child: Column(
           children: [
             Row(
@@ -224,7 +229,12 @@ class _AddItemPageState extends State<AddItemPage> {
                     selectedZone = filteredZones[index]['IdZone'];
                   });
                 },
-                children: filteredZones.map((zone) => Text(zone['ZoneName'])).toList(),
+                children: filteredZones
+                    .map((zone) => Text(
+                          zone['ZoneName'],
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        ))
+                    .toList(),
               ),
             ),
           ],
@@ -251,22 +261,18 @@ class _AddItemPageState extends State<AddItemPage> {
                     CupertinoFormSection(
                       header: Text(
                         "Informação do Item",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: CupertinoColors.systemGrey,
-                        ),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       children: [
                         CupertinoTextFormFieldRow(
                           controller: _idItemController,
                           placeholder: 'ID',
-                          style: TextStyle(fontSize: 16),
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                         CupertinoTextFormFieldRow(
                           controller: _itemNameController,
                           placeholder: 'Nome',
-                          style: TextStyle(fontSize: 16),
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -283,16 +289,28 @@ class _AddItemPageState extends State<AddItemPage> {
                       ),
                       children: [
                         CupertinoListTile(
-                          title: Text("Lugar"),
+                          title: Text(
+                            "Lugar",
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
                           trailing: CupertinoButton(
-                            child: Text(selectedPlace != null ? places.firstWhere((place) => place['IdPlace'] == selectedPlace)['PlaceName'] : 'Select'),
+                            child: Text(
+                              selectedPlace != null ? places.firstWhere((place) => place['IdPlace'] == selectedPlace)['PlaceName'] : 'Select',
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
                             onPressed: _showPlacePicker,
                           ),
                         ),
                         CupertinoListTile(
-                          title: Text("Zona"),
+                          title: Text(
+                            "Zona",
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
                           trailing: CupertinoButton(
-                            child: Text(selectedZone != null ? filteredZones.firstWhere((zone) => zone['IdZone'] == selectedZone)['ZoneName'] : 'Select'),
+                            child: Text(
+                              selectedZone != null ? filteredZones.firstWhere((zone) => zone['IdZone'] == selectedZone)['ZoneName'] : 'Select',
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
                             onPressed: _showZonePicker,
                           ),
                         ),
@@ -310,12 +328,36 @@ class _AddItemPageState extends State<AddItemPage> {
                         ),
                       ),
                       children: [
-                        CupertinoTextFormFieldRow(controller: _marcaController, placeholder: 'Marca'),
-                        CupertinoTextFormFieldRow(controller: _tipoController, placeholder: 'Tipo'),
-                        CupertinoTextFormFieldRow(controller: _quantidadeController, placeholder: 'Quantidade'),
-                        CupertinoTextFormFieldRow(controller: _condicaoController, placeholder: 'Condição'),
-                        CupertinoTextFormFieldRow(controller: _tamanhoController, placeholder: 'Tamanho'),
-                        CupertinoTextFormFieldRow(controller: _ultimaVerificacaoController, placeholder: 'Última Verificação'),
+                        CupertinoTextFormFieldRow(
+                          controller: _marcaController,
+                          placeholder: 'Marca',
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        CupertinoTextFormFieldRow(
+                          controller: _tipoController,
+                          placeholder: 'Tipo',
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        CupertinoTextFormFieldRow(
+                          controller: _quantidadeController,
+                          placeholder: 'Quantidade',
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        CupertinoTextFormFieldRow(
+                          controller: _condicaoController,
+                          placeholder: 'Condição',
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        CupertinoTextFormFieldRow(
+                          controller: _tamanhoController,
+                          placeholder: 'Tamanho',
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        CupertinoTextFormFieldRow(
+                          controller: _ultimaVerificacaoController,
+                          placeholder: 'Última Verificação',
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
 
                         // Dynamic Inputs Section (right below the Details Section)
                         ..._dynamicInputs.map((input) {
@@ -329,6 +371,7 @@ class _AddItemPageState extends State<AddItemPage> {
                                     child: CupertinoTextFormFieldRow(
                                       controller: input['detalhe'],
                                       placeholder: 'Detalhe',
+                                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                     ),
                                   ),
                                   SizedBox(width: 5), // Add some spacing between the inputs
@@ -337,6 +380,7 @@ class _AddItemPageState extends State<AddItemPage> {
                                     child: CupertinoTextFormFieldRow(
                                       controller: input['detalheName'],
                                       placeholder: 'Detalhe Name',
+                                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                     ),
                                   ),
                                   SizedBox(width: 10), // Add some spacing between the inputs and the button
@@ -353,11 +397,13 @@ class _AddItemPageState extends State<AddItemPage> {
                           );
                         }).toList(),
                         CupertinoListTile(
-                          title: IconButton(
-                            onPressed: _addDynamicInput,
-                            icon: Icon(CupertinoIcons.add),
+                            title: IconButton(
+                          onPressed: _addDynamicInput,
+                          icon: Icon(
+                            CupertinoIcons.add,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                        ),
+                        )),
                       ],
                     ),
                   ],

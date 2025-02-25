@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:roominventory/eventos/eventdetails.dart';
 import '../appbar/appbar.dart';
+import 'eventos_add.dart';
 
 class EventosPage extends StatefulWidget {
   @override
@@ -60,7 +61,7 @@ class _EventosPageState extends State<EventosPage> {
   }
 
   // Function to determine card background color
-  IconData _getCardColor(String eventDate) {
+  IconData _getCardIcon(String eventDate) {
     try {
       DateTime eventDateTime = DateFormat("yyyy-MM-dd").parse(eventDate);
       DateTime today = DateTime.now();
@@ -79,12 +80,21 @@ class _EventosPageState extends State<EventosPage> {
     }
   }
 
+  void NavigateAdd() {
+    print("Navigating to Add Item Page");
+    Navigator.push(
+      context,
+      CupertinoPageRoute(builder: (context) => AddEventPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CustomNavigationBar(
         title: 'Eventos',
         previousPageTitle: 'Inventário',
+        onAddPressed: NavigateAdd,
       ),
       child: isLoading
           ? Center(child: CupertinoActivityIndicator())
@@ -140,9 +150,13 @@ class _EventosPageState extends State<EventosPage> {
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
+                                                color: Theme.of(context).colorScheme.onSurface,
                                               ),
                                             ),
-                                            Icon(_getCardColor(event['Date']))
+                                            Icon(
+                                              _getCardIcon(event['Date']),
+                                              color: Theme.of(context).colorScheme.primary,
+                                            )
                                           ],
                                         ),
                                         subtitle: Padding(
@@ -153,7 +167,7 @@ class _EventosPageState extends State<EventosPage> {
                                               Text(
                                                 "📍 ${event['EventPlace']}",
                                                 style: TextStyle(
-                                                  color: CupertinoColors.secondaryLabel,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -161,7 +175,7 @@ class _EventosPageState extends State<EventosPage> {
                                               Text(
                                                 "👤 ${event['NameRep']}",
                                                 style: TextStyle(
-                                                  color: CupertinoColors.secondaryLabel,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -169,7 +183,7 @@ class _EventosPageState extends State<EventosPage> {
                                               Text(
                                                 "📧 ${event['EmailRep']}",
                                                 style: TextStyle(
-                                                  color: CupertinoColors.secondaryLabel,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -177,7 +191,7 @@ class _EventosPageState extends State<EventosPage> {
                                               Text(
                                                 "🛠 ${event['TecExt']}",
                                                 style: TextStyle(
-                                                  color: CupertinoColors.secondaryLabel,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -185,7 +199,7 @@ class _EventosPageState extends State<EventosPage> {
                                               Text(
                                                 "📅 Date: ${event['Date']}",
                                                 style: TextStyle(
-                                                  color: CupertinoColors.secondaryLabel,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -193,14 +207,13 @@ class _EventosPageState extends State<EventosPage> {
                                               Text(
                                                 "ID: ${event['IdEvent']}",
                                                 style: TextStyle(
-                                                  color: CupertinoColors.secondaryLabel,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                                   fontSize: 14,
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        trailing: CupertinoListTileChevron(),
                                         onTap: () {
                                           Navigator.push(
                                             context,

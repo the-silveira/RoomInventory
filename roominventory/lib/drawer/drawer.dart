@@ -1,18 +1,31 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
+import '../calendar/calendar.dart';
 import '/eventos/eventos.dart';
 import '/itens/itens.dart';
 import '/locais/locais.dart';
 import '/definicoes/definicoes.dart';
 
-import 'package:flutter/material.dart';
+class OptionsPage extends StatefulWidget {
+  @override
+  _OptionsPageState createState() => _OptionsPageState();
+}
 
-class OptionsPage extends StatelessWidget {
+class _OptionsPageState extends State<OptionsPage> {
+  bool isLoading = true;
+  String errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       child: CustomScrollView(
         slivers: <Widget>[
-          // Large title navigation bar
           CupertinoSliverNavigationBar(
             largeTitle: Text(
               "Inventário",
@@ -34,7 +47,7 @@ class OptionsPage extends StatelessWidget {
                     ),
                   ),
                   leading: Icon(
-                    CupertinoIcons.calendar,
+                    CupertinoIcons.list_dash,
                     color: CupertinoColors.systemBlue,
                   ),
                   trailing: CupertinoListTileChevron(),
@@ -112,7 +125,16 @@ class OptionsPage extends StatelessWidget {
             ),
           ),
 
-          // Third Section: About
+          SliverToBoxAdapter(
+            child: CupertinoListSection.insetGrouped(
+              children: [
+                Container(
+                  height: 700, // Set a fixed height for the calendar
+                  child: CalendarWidget(), // Use the extracted calendar widget
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
