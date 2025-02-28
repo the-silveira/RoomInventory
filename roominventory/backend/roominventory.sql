@@ -1,22 +1,77 @@
 -- Create Tables
+    create table Permissions(
+    IdPermission int(10) PRIMARY KEY auto_increment,
+    PermissionName varchar(75)
+);
+
+
+
+create Table Users(
+    IdUser int(10) PRIMARY KEY AUTO_INCREMENT,
+    UserName varchar (75),
+    Password varchar(250),
+    UserEmail varchar(250)
+);
+
+
+create table Organizations(
+    IdOrganization varchar(10) PRIMARY KEY,
+    OrganizationName varchar(75),
+    FK_IdUser int(10),
+    FOREIGN KEY (FK_IdUser) REFERENCES Users(IdUser)
+);
+
+ 
+create table Buildings (
+    IdBuilding varchar(10) PRIMARY KEY,
+    BuildingName varchar(75),
+    FK_IdOragnization varchar(10),
+    FOREIGN KEY (FK_IdOragnization) REFERENCES Organizations(IdOrganization)
+);
+
+
+
+create table User_Buildings(
+    IdUser_Building int(10) PRIMARY KEY auto_increment,
+    FK_IdUser int(10),
+    FK_IdBuilding varchar(10),
+    FOREIGN KEY (FK_IdUser) REFERENCES Users(IdUser),
+    FOREIGN KEY (FK_IdBuilding) REFERENCES Buildings(IdBuilding)
+);
+
+
+
+CREATE TABLE User_Buildings_Permissions(
+    IdUser_Building_Permissions int(10),
+    FK_IdPermission int(10),
+    Value boolean,
+    FOREIGN KEY (FK_IdPermission) REFERENCES Permissions(IdPermission)
+);
+
 
 CREATE TABLE Places (
     IdPlace VARCHAR(50) PRIMARY KEY,
-    PlaceName VARCHAR(75)
+    PlaceName VARCHAR(75),
+    FK_IdBuilding varchar(10),
+    FOREIGN KEY (FK_IdBuilding) REFERENCES Buildings(IdBuilding),
 );
 
 CREATE TABLE Zones (
     IdZone VARCHAR(50) PRIMARY KEY,
     ZoneName VARCHAR(75),
     FK_IdPlace VARCHAR(50),
-    FOREIGN KEY (FK_IdPlace) REFERENCES Places(IdPlace)
+    FK_IdBuilding varchar(10),
+    FOREIGN KEY (FK_IdPlace) REFERENCES Places(IdPlace),
+    FOREIGN KEY (FK_IdBuilding) REFERENCES Buildings(IdBuilding)
 );
 
 CREATE TABLE Items (
     IdItem VARCHAR(50) PRIMARY KEY,
     ItemName VARCHAR(75),
     FK_IdZone VARCHAR(50),
-    FOREIGN KEY (FK_IdZone) REFERENCES Zones(IdZone)    
+    FK_IdBuilding varchar(10),   
+    FOREIGN KEY (FK_IdZone) REFERENCES Zones(IdZone),
+    FOREIGN KEY (FK_IdBuilding) REFERENCES Buildings(IdBuilding)
 );
 
 CREATE TABLE Details (
@@ -34,7 +89,8 @@ CREATE TABLE Events (
     NameRep VARCHAR(75),
     EmailRep VARCHAR(75),
     TecExt VARCHAR(75),
-    Date DATE
+    Date DATE,
+    FOREIGN KEY (FK_IdBuilding) REFERENCES Buildings(IdBuilding)
 );
 
 CREATE TABLE Item_Event (
@@ -44,6 +100,17 @@ CREATE TABLE Item_Event (
     FOREIGN KEY (FK_IdItem) REFERENCES Items(IdItem),
     FOREIGN KEY (FK_IdEvent) REFERENCES Events(IdEvent)
 );
+
+INSERT INTO Permissions VALUES 
+(1, 'See Events'),
+(2, 'Full Control on Events'),
+(3, 'See Places'),
+(4, 'Full Control on Places'),
+(5, 'See Items'),
+(6, 'Full Control on Items');
+
+
+
 
 -- Insert into Places
 INSERT INTO Places (IdPlace, PlaceName) VALUES

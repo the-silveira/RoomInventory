@@ -88,9 +88,10 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             },
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: CupertinoColors.black,
+                color: Theme.of(context).colorScheme.onSurface,
                 shape: BoxShape.circle,
               ),
+              todayTextStyle: TextStyle(color: Theme.of(context).colorScheme.surface),
               selectedDecoration: BoxDecoration(
                 color: CupertinoColors.activeBlue,
                 shape: BoxShape.circle,

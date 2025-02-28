@@ -127,11 +127,7 @@ class _EventosPageState extends State<EventosPage> {
                               child: CupertinoListSection(
                                 header: Text(
                                   "Todos os Eventos",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                    color: CupertinoTheme.of(context).textTheme.textStyle.color,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).colorScheme.onSurface),
                                 ),
                                 children: filteredEvents.map<Widget>((event) {
                                   // Corrected mapping to List<Widget>

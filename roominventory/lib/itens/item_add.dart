@@ -19,6 +19,7 @@ class _AddItemPageState extends State<AddItemPage> {
   final TextEditingController _tamanhoController = TextEditingController();
   final TextEditingController _tipoController = TextEditingController();
   final TextEditingController _ultimaVerificacaoController = TextEditingController();
+  DateTime? _ultimaVerificacaoDate;
 
   List<dynamic> places = [];
   List<dynamic> zones = [];
@@ -69,7 +70,14 @@ class _AddItemPageState extends State<AddItemPage> {
   }
 
   Future<void> _saveItem() async {
-    _detailsList.add({'Marca': _marcaController.text, 'Tipo': _tipoController.text, 'Quantidade': _quantidadeController.text, 'Condição': _condicaoController.text, 'Tamanho': _tamanhoController.text, 'Ultima Verificação': _ultimaVerificacaoController.text});
+    _detailsList.add({
+      'Marca': _marcaController.text,
+      'Tipo': _tipoController.text,
+      'Quantidade': _quantidadeController.text,
+      'Condição': _condicaoController.text,
+      'Tamanho': _tamanhoController.text,
+      'Última Verificação': _ultimaVerificacaoDate != null ? '${_ultimaVerificacaoDate!.day}/${_ultimaVerificacaoDate!.month}/${_ultimaVerificacaoDate!.year}' : '',
+    });
 
     try {
       var response = await http.post(
@@ -243,11 +251,53 @@ class _AddItemPageState extends State<AddItemPage> {
     );
   }
 
+  void _showDatePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CupertinoButton(
+                  child: Text('Cancelar'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoButton(
+                  child: Text('Confirmar'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: _ultimaVerificacaoDate ?? DateTime.now(),
+                minimumDate: DateTime(1900),
+                maximumDate: DateTime(2100),
+                onDateTimeChanged: (DateTime newDate) {
+                  setState(() {
+                    _ultimaVerificacaoDate = newDate;
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: AddNavigationBar(
-        title: 'Itens',
+        title: 'Novo Item',
         previousPageTitle: 'Inventário',
         onAddPressed: _saveItem,
       ),
@@ -353,10 +403,18 @@ class _AddItemPageState extends State<AddItemPage> {
                           placeholder: 'Tamanho',
                           style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
-                        CupertinoTextFormFieldRow(
-                          controller: _ultimaVerificacaoController,
-                          placeholder: 'Última Verificação',
-                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        CupertinoListTile(
+                          title: Text(
+                            'Última Verificação',
+                            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
+                          trailing: CupertinoButton(
+                            child: Text(
+                              _ultimaVerificacaoDate != null ? '${_ultimaVerificacaoDate!.day}/${_ultimaVerificacaoDate!.month}/${_ultimaVerificacaoDate!.year}' : 'Selecionar Data',
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
+                            onPressed: _showDatePicker,
+                          ),
                         ),
 
                         // Dynamic Inputs Section (right below the Details Section)
