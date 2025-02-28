@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:roominventory/appbar/appbar.dart';
-import 'dart:convert';
 
-import '../appbar/appbar_back.dart';
+import 'package:roominventory/eventos/eventos_items_add.dart';
+import 'dart:convert';
 
 class EventDetailsPage extends StatefulWidget {
   final String eventId;
@@ -64,36 +64,44 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       );
 
       if (itemsResponse.statusCode == 200) {
-        List<dynamic> rawItems = json.decode(itemsResponse.body);
+        dynamic responseBody = json.decode(itemsResponse.body);
 
-        // Group the details by IdItem
-        Map<String, Map<String, dynamic>> groupedItems = {};
+        if (responseBody is Map && responseBody.containsKey('status') && responseBody['status'] == 'error') {
+          print("Error");
+        } else {
+          print(itemsResponse.body.toString());
 
-        for (var row in rawItems) {
-          String idItem = row['IdItem'];
-          String detailsName = row['DetailsName'];
-          String detailValue = row['Details'];
+          List<dynamic> rawItems = json.decode(itemsResponse.body);
 
-          if (!groupedItems.containsKey(idItem)) {
-            groupedItems[idItem] = {
-              'IdItem': idItem,
-              'ItemName': row['ItemName'],
-              'ZoneName': row['ZoneName'],
-              'PlaceName': row['PlaceName'],
-              'DetailsList': [],
-            };
+          // Group the details by IdItem
+          Map<String, Map<String, dynamic>> groupedItems = {};
+
+          for (var row in rawItems) {
+            String idItem = row['IdItem'];
+            String detailsName = row['DetailsName'];
+            String detailValue = row['Details'];
+
+            if (!groupedItems.containsKey(idItem)) {
+              groupedItems[idItem] = {
+                'IdItem': idItem,
+                'ItemName': row['ItemName'],
+                'ZoneName': row['ZoneName'],
+                'PlaceName': row['PlaceName'],
+                'DetailsList': [],
+              };
+            }
+
+            // Add details to the item
+            groupedItems[idItem]!['DetailsList'].add({
+              'DetailsName': detailsName,
+              'Details': detailValue,
+            });
           }
 
-          // Add details to the item
-          groupedItems[idItem]!['DetailsList'].add({
-            'DetailsName': detailsName,
-            'Details': detailValue,
+          setState(() {
+            items = groupedItems.values.toList();
           });
         }
-
-        setState(() {
-          items = groupedItems.values.toList();
-        });
       } else {
         setState(() {
           errorMessage = 'Failed to load item details';
@@ -110,12 +118,22 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     }
   }
 
+  void NavigateAdd() {
+    print("Navigating to Add Item Page");
+    Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => AssociateItemsPage(eventId: widget.eventId),
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CustomNavigationBar(
         title: 'Relatório',
         previousPageTitle: 'Eventos',
+        onAddPressed: NavigateAdd,
       ),
       child: isLoading
           ? Center(child: CupertinoActivityIndicator())
@@ -161,6 +179,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                           ),
                         ),
                         // Scrollable List of Items
+
                         items.isEmpty
                             ? Center(
                                 child: Padding(

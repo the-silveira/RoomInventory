@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'dart:convert';
 
 import '../appbar/appbar_back.dart';
@@ -11,14 +12,58 @@ class AddEventPage extends StatefulWidget {
 }
 
 class _AddEventPageState extends State<AddEventPage> {
+  final _eventIdController = TextEditingController();
   final _eventNameController = TextEditingController();
   final _eventPlaceController = TextEditingController();
   final _nameRepController = TextEditingController();
   final _emailRepController = TextEditingController();
   final _tecExtController = TextEditingController();
   final _dateController = TextEditingController();
+  DateTime? _selectedDate;
   bool _isLoading = false;
   String? _errorMessage;
+  void _showDatePicker(BuildContext context) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 250,
+        color: CupertinoColors.systemBackground,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CupertinoButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoButton(
+                  child: Text('Done'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: _selectedDate ?? DateTime.now(),
+                minimumDate: DateTime(2000),
+                maximumDate: DateTime(2100),
+                onDateTimeChanged: (DateTime newDate) {
+                  setState(() {
+                    _selectedDate = newDate;
+                    _dateController.text = newDate.toString();
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // Function to validate the form
   bool _validateForm() {
@@ -70,7 +115,8 @@ class _AddEventPageState extends State<AddEventPage> {
       var response = await http.post(
         Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {
-          'query_param': 'E2', // Assuming 'E2' is the query for adding an event
+          'query_param': 'E3', // Assuming 'E2' is the query for adding an event
+          'IdEvent': _eventIdController.text,
           'EventName': _eventNameController.text,
           'EventPlace': _eventPlaceController.text,
           'NameRep': _nameRepController.text,
@@ -112,7 +158,7 @@ class _AddEventPageState extends State<AddEventPage> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: AddNavigationBar(
-        title: 'Itens',
+        title: 'Novo Evento',
         previousPageTitle: 'Eventos',
         onAddPressed: _saveItem,
       ),
@@ -134,62 +180,100 @@ class _AddEventPageState extends State<AddEventPage> {
                     ),
                   ),
                 CupertinoTextField(
-                  controller: _eventNameController,
-                  placeholder: 'Event Name',
+                  controller: _eventIdController,
+                  placeholder: 'ID',
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(color: CupertinoColors.systemGrey),
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(height: 16),
+                CupertinoTextField(
+                  controller: _eventNameController,
+                  placeholder: 'Nome',
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: CupertinoColors.systemGrey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(height: 16),
                 CupertinoTextField(
                   controller: _eventPlaceController,
-                  placeholder: 'Event Place',
+                  placeholder: 'Local',
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(color: CupertinoColors.systemGrey),
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(height: 16),
                 CupertinoTextField(
                   controller: _nameRepController,
-                  placeholder: 'Representative Name',
+                  placeholder: 'Nome Representante',
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(color: CupertinoColors.systemGrey),
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(height: 16),
                 CupertinoTextField(
                   controller: _emailRepController,
-                  placeholder: 'Representative Email',
+                  placeholder: 'Email Representante',
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(color: CupertinoColors.systemGrey),
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(height: 16),
                 CupertinoTextField(
                   controller: _tecExtController,
-                  placeholder: 'Technical Details',
+                  placeholder: 'Técnico Externo',
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(color: CupertinoColors.systemGrey),
                     borderRadius: BorderRadius.circular(8),
                   ),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 SizedBox(height: 16),
-                CupertinoTextField(
-                  controller: _dateController,
-                  placeholder: 'Event Date (YYYY-MM-DD)',
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: CupertinoColors.systemGrey),
-                    borderRadius: BorderRadius.circular(8),
+                GestureDetector(
+                  onTap: () => _showDatePicker(context),
+                  child: AbsorbPointer(
+                    child: CupertinoTextField(
+                      controller: TextEditingController(
+                        text: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : '',
+                      ),
+                      placeholder: 'Data Evento',
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: CupertinoColors.systemGrey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                   ),
                 ),
               ],

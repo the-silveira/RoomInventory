@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
-import '../calendar/calendar.dart';
+import 'calendar.dart';
 import '/eventos/eventos.dart';
 import '/itens/itens.dart';
 import '/locais/locais.dart';
@@ -130,7 +129,8 @@ class _OptionsPageState extends State<OptionsPage> {
               children: [
                 Container(
                   height: 700, // Set a fixed height for the calendar
-                  child: CalendarWidget(), // Use the extracted calendar widget
+                  child: CalendarWidget(),
+                  // Use the extracted calendar widget
                 ),
               ],
             ),
