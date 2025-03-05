@@ -185,7 +185,7 @@ class _LocaisPageState extends State<LocaisPage> {
                             return CupertinoListSection(
                               header: Text(
                                 place['PlaceName'] ?? 'Unknown Place',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).colorScheme.onSurface),
+                                style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface),
                               ),
                               children: [
                                 ...place['Zones'].entries.map((zoneEntry) {
@@ -193,7 +193,7 @@ class _LocaisPageState extends State<LocaisPage> {
                                   return CupertinoListSection.insetGrouped(
                                     header: Text(
                                       zone['ZoneName'] ?? 'Unknown Zone',
-                                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                     ),
                                     children: [
                                       ...zone['Items'].entries.map((itemEntry) {
