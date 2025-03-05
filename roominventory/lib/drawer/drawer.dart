@@ -32,6 +32,7 @@ class _OptionsPageState extends State<OptionsPage> {
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
           ),
 
           // First Section: Navigation

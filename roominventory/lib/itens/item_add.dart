@@ -311,7 +311,7 @@ class _AddItemPageState extends State<AddItemPage> {
                     CupertinoFormSection(
                       header: Text(
                         "Informação do Item",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       children: [
                         CupertinoTextFormFieldRow(
@@ -333,7 +333,6 @@ class _AddItemPageState extends State<AddItemPage> {
                         "Localização",
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
                           color: CupertinoColors.systemGrey,
                         ),
                       ),
@@ -373,7 +372,6 @@ class _AddItemPageState extends State<AddItemPage> {
                         "Item Details",
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
                           color: CupertinoColors.systemGrey,
                         ),
                       ),

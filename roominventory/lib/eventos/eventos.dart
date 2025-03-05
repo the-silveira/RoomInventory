@@ -80,6 +80,14 @@ class _EventosPageState extends State<EventosPage> {
     }
   }
 
+  Future<void> _refreshData() async {
+    await Future.delayed(Duration(milliseconds: 1000));
+    setState(() {
+      isLoading = true; // Show loading indicator
+    });
+    await _fetchData(); // Re-fetch data from the API
+  }
+
   void NavigateAdd() {
     print("Navigating to Add Item Page");
     Navigator.push(
@@ -96,21 +104,21 @@ class _EventosPageState extends State<EventosPage> {
         previousPageTitle: 'Inventário',
         onAddPressed: NavigateAdd,
       ),
-      child: isLoading
-          ? Center(child: CupertinoActivityIndicator())
-          : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: CupertinoSearchTextField(
-                        controller: searchController,
-                        onChanged: _filterItems,
-                        placeholder: 'Search items...',
-                      ),
-                    ),
-                    Expanded(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CupertinoSearchTextField(
+              controller: searchController,
+              onChanged: _filterItems,
+              placeholder: 'Search items...',
+            ),
+          ),
+          isLoading
+              ? Center(child: CupertinoActivityIndicator())
+              : errorMessage.isNotEmpty
+                  ? Center(child: Text(errorMessage))
+                  : Expanded(
                       child: filteredEvents.isEmpty
                           ? Scaffold(
                               body: Center(
@@ -123,110 +131,112 @@ class _EventosPageState extends State<EventosPage> {
                                 ),
                               ),
                             )
-                          : SingleChildScrollView(
-                              child: CupertinoListSection(
-                                header: Text(
-                                  "Todos os Eventos",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).colorScheme.onSurface),
+                          : CustomScrollView(
+                              slivers: [
+                                CupertinoSliverRefreshControl(
+                                  onRefresh: _refreshData, // Trigger refresh when pulled
                                 ),
-                                children: filteredEvents.map<Widget>((event) {
-                                  // Corrected mapping to List<Widget>
-
-                                  return CupertinoListSection.insetGrouped(
-                                    children: [
-                                      CupertinoListTile.notched(
-                                        title: Row(
-                                          children: [
-                                            Text(
-                                              event['EventName'].toString().isEmpty
-                                                  ? 'Empty Name'
-                                                  : event['EventName'].toString().length > 35
-                                                      ? event['EventName'].toString().substring(0, 35) + "..."
-                                                      : event['EventName'],
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color: Theme.of(context).colorScheme.onSurface,
+                                SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      var event = filteredEvents[index];
+                                      return CupertinoListSection.insetGrouped(
+                                        children: [
+                                          CupertinoListTile.notched(
+                                            title: Row(
+                                              children: [
+                                                Text(
+                                                  event['EventName'].toString().isEmpty
+                                                      ? 'Empty Name'
+                                                      : event['EventName'].toString().length > 35
+                                                          ? event['EventName'].toString().substring(0, 35) + "..."
+                                                          : event['EventName'],
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Theme.of(context).colorScheme.onSurface,
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  _getCardIcon(event['Date']),
+                                                  color: Theme.of(context).colorScheme.primary,
+                                                ),
+                                              ],
+                                            ),
+                                            subtitle: Padding(
+                                              padding: EdgeInsets.only(bottom: 10), // Add padding above the subtitle
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "📍 ${event['EventPlace']}",
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 2), // Add spacing between lines
+                                                  Text(
+                                                    "👤 ${event['NameRep']}",
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 2),
+                                                  Text(
+                                                    "📧 ${event['EmailRep']}",
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 2),
+                                                  Text(
+                                                    "🛠 ${event['TecExt']}",
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 2),
+                                                  Text(
+                                                    "📅 Date: ${event['Date']}",
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 2),
+                                                  Text(
+                                                    "ID: ${event['IdEvent']}",
+                                                    style: TextStyle(
+                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            Icon(
-                                              _getCardIcon(event['Date']),
-                                              color: Theme.of(context).colorScheme.primary,
-                                            )
-                                          ],
-                                        ),
-                                        subtitle: Padding(
-                                          padding: EdgeInsets.only(bottom: 10), // Add padding above the subtitle
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "📍 ${event['EventPlace']}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  fontSize: 14,
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                CupertinoPageRoute(
+                                                  builder: (context) => EventDetailsPage(eventId: event['IdEvent']),
                                                 ),
-                                              ),
-                                              SizedBox(height: 2), // Add spacing between lines
-                                              Text(
-                                                "👤 ${event['NameRep']}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              SizedBox(height: 2),
-                                              Text(
-                                                "📧 ${event['EmailRep']}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              SizedBox(height: 2),
-                                              Text(
-                                                "🛠 ${event['TecExt']}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              SizedBox(height: 2),
-                                              Text(
-                                                "📅 Date: ${event['Date']}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              SizedBox(height: 2),
-                                              Text(
-                                                "ID: ${event['IdEvent']}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
+                                              );
+                                            },
                                           ),
-                                        ),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            CupertinoPageRoute(
-                                              builder: (context) => EventDetailsPage(eventId: event['IdEvent']),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                }).toList(), // Make sure this is List<Widget>
-                              ),
+                                        ],
+                                      );
+                                    },
+                                    childCount: filteredEvents.length,
+                                  ),
+                                ),
+                              ],
                             ),
                     ),
-                  ],
-                ),
+        ],
+      ),
     );
   }
 }
