@@ -113,7 +113,8 @@ class _AddEventPageState extends State<AddEventPage> {
 
     try {
       var response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {
           'query_param': 'E3', // Assuming 'E2' is the query for adding an event
           'IdEvent': _eventIdController.text,
@@ -135,7 +136,9 @@ class _AddEventPageState extends State<AddEventPage> {
           Navigator.pop(context); // Return to the previous page
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add event: ${responseData['message']}')),
+            SnackBar(
+                content:
+                    Text('Failed to add event: ${responseData['message']}')),
           );
         }
       } else {
@@ -262,7 +265,9 @@ class _AddEventPageState extends State<AddEventPage> {
                   child: AbsorbPointer(
                     child: CupertinoTextField(
                       controller: TextEditingController(
-                        text: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : '',
+                        text: _selectedDate != null
+                            ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+                            : '',
                       ),
                       placeholder: 'Data Evento',
                       padding: EdgeInsets.all(12),

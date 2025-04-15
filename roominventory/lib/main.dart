@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:roominventory/drawer/drawer.dart';
 import 'definicoes/provider.dart'; // Import the ThemeProvider
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -49,7 +52,8 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark, // Dark theme
         ),
         textTheme: TextTheme(
-          bodyLarge: TextStyle(color: Colors.white), // Custom text color for dark mode
+          bodyLarge:
+              TextStyle(color: Colors.white), // Custom text color for dark mode
         ),
       ),
       themeMode: themeProvider.themeMode, // Use the selected theme mode

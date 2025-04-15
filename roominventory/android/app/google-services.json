@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "981718913802",
+    "project_id": "login-e6369",
+    "storage_bucket": "login-e6369.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981718913802:android:c823a88c8adf2d501820f3",
+        "android_client_info": {
+          "package_name": "com.example.roominventory"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "981718913802-jvbb6fmo0o0mt64sgoohbfn1nu4spmet.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.roominventory",
+            "certificate_hash": "10b55b0d972c27b86498e254880918c2c4b07761"
+          }
+        },
+        {
+          "client_id": "981718913802-c6mol4jt2p27fbrvu3bbmaec2hu57ht7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEiOvG0Bv-FDIVkLGs8YgwcrnMDQbQjxA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "981718913802-c6mol4jt2p27fbrvu3bbmaec2hu57ht7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "981718913802-j4ifvrc053qdbbn5m3r6l0j1h9069hsp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.roominventory"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
