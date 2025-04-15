@@ -30,7 +30,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   Future<void> _loadEvents() async {
     try {
       var response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {'query_param': 'E1'},
       );
 
@@ -40,7 +41,17 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
         setState(() {
           _events = {
-            for (var event in eventsJson) _normalizeDate(DateTime.parse(event['Date'])): [Event(event['IdEvent'], event['EventName'], event['EventPlace'], event['NameRep'], event['EmailRep'], event['TecExt'], event['Date'])]
+            for (var event in eventsJson)
+              _normalizeDate(DateTime.parse(event['Date'])): [
+                Event(
+                    event['IdEvent'],
+                    event['EventName'],
+                    event['EventPlace'],
+                    event['NameRep'],
+                    event['EmailRep'],
+                    event['TecExt'],
+                    event['Date'])
+              ]
           };
           //print('Events Map: $_events'); // Debug: Print events map
         });
@@ -91,7 +102,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 color: Theme.of(context).colorScheme.onSurface,
                 shape: BoxShape.circle,
               ),
-              todayTextStyle: TextStyle(color: Theme.of(context).colorScheme.surface),
+              todayTextStyle:
+                  TextStyle(color: Theme.of(context).colorScheme.surface),
               selectedDecoration: BoxDecoration(
                 color: CupertinoColors.activeBlue,
                 shape: BoxShape.circle,
@@ -112,7 +124,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 ? Center(
                     child: Text(
                       'No events for the selected day',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface),
                     ),
                   )
                 : ListView.builder(
@@ -128,7 +141,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             Text(
                               "📍 ${event.IdEvent}",
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -136,7 +151,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             Text(
                               "👤 ${event.NameRep}",
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -144,7 +161,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             Text(
                               "📧 ${event.EmailRep}",
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -152,7 +171,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             Text(
                               "🛠 ${event.TecExt}",
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -160,7 +181,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             Text(
                               "📅 Date: ${event.Date}",
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -168,7 +191,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             Text(
                               "ID: ${event.IdEvent}",
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -188,5 +213,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 class Event {
   final String IdEvent, EventName, EventPlace, NameRep, EmailRep, TecExt, Date;
 
-  Event(this.IdEvent, this.EventName, this.EventPlace, this.NameRep, this.EmailRep, this.TecExt, this.Date);
+  Event(this.IdEvent, this.EventName, this.EventPlace, this.NameRep,
+      this.EmailRep, this.TecExt, this.Date);
 }
