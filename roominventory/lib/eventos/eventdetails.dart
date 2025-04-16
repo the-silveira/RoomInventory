@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:roominventory/appbar/appbar.dart';
+import 'package:roominventory/eventos/eventEdit.dart';
 
 import 'package:roominventory/eventos/eventos_items_add.dart';
 import 'dart:convert';
@@ -29,9 +30,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
   Future<void> _fetchData() async {
     try {
+      items.clear();
       // Fetch event details
       var eventResponse = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {'query_param': 'E1'},
       );
 
@@ -59,14 +62,17 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
       // Fetch item details for this event
       var itemsResponse = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {'query_param': 'E2', 'IdEvent': widget.eventId},
       );
 
       if (itemsResponse.statusCode == 200) {
         dynamic responseBody = json.decode(itemsResponse.body);
 
-        if (responseBody is Map && responseBody.containsKey('status') && responseBody['status'] == 'error') {
+        if (responseBody is Map &&
+            responseBody.containsKey('status') &&
+            responseBody['status'] == 'error') {
           print("Error");
         } else {
           print(itemsResponse.body.toString());
@@ -121,9 +127,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   void _deleteEvent() async {
     try {
       var response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {
-          'query_param': 'E5', // Assuming 'E3' is the API parameter for deleting an event
+          'query_param':
+              'E5', // Assuming 'E3' is the API parameter for deleting an event
           'IdEvent': widget.eventId,
         },
       );
@@ -193,20 +201,30 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         context,
         CupertinoPageRoute(
           builder: (context) => AssociateItemsPage(eventId: widget.eventId),
-        ));
+        )).then((_) {
+      // This runs after returning from AssociateItemsPage
+      _fetchData();
+    });
   }
 
   Future<void> _deleteItemDB(String IdItem) async {
     try {
       var response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E6', 'IdItem': IdItem, 'IdEvent': widget.eventId},
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
+        body: {
+          'query_param': 'E6',
+          'IdItem': IdItem,
+          'IdEvent': widget.eventId
+        },
       );
       if (response.statusCode == 200) {
         if (json.decode(response.body)['status'].toString() == 'success') {
-          _showMessage("Item Eliminado com Sucesso", json.decode(response.body)['status'].toString());
+          _showMessage("Item Eliminado com Sucesso",
+              json.decode(response.body)['status'].toString());
         } else {
-          _showMessage("Erro ao Eliminar. Tente novamente", json.decode(response.body)['status'].toString());
+          _showMessage("Erro ao Eliminar. Tente novamente",
+              json.decode(response.body)['status'].toString());
         }
       }
     } catch (e) {
@@ -236,7 +254,8 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
   void _deleteItem(String IdItem, BuildContext context) {
     print(IdItem);
-    _showDeleteDialog('Tem Mesmo a certeza que quer eliminar?', context, IdItem);
+    _showDeleteDialog(
+        'Tem Mesmo a certeza que quer eliminar?', context, IdItem);
   }
 
   void _showDeleteDialog(String message, BuildContext context, String IdItem) {
@@ -264,6 +283,22 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
         ],
       ),
     );
+  }
+
+  _editEvent(dynamic event) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => EditEventPage(event: event),
+      ),
+    ).then((success) {
+      if (success == true) {
+        _fetchData(); // Refresh the data if changes were saved
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Event updated successfully')),
+        );
+      }
+    });
   }
 
   @override
@@ -294,29 +329,50 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                 Text(event!['EventName'] ?? 'No Name',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     )),
                                 SizedBox(height: 8),
                                 Text(
                                   "📍 ${event!['EventPlace']}",
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
                                 ),
                                 Text(
                                   "👤 ${event!['NameRep']}",
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
                                 ),
                                 Text(
                                   "📧 ${event!['EmailRep']}",
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
                                 ),
                                 Text(
                                   "🛠 ${event!['TecExt']}",
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
                                 ),
                                 Text(
                                   "📅 Date: ${event!['Date']}",
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
                                 ),
+                                CupertinoButton(
+                                    child:
+                                        Icon(CupertinoIcons.pencil, size: 20),
+                                    onPressed: _editEvent(event))
                               ],
                             ),
                           ),
@@ -326,7 +382,11 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                     padding: const EdgeInsets.all(16.0),
                                     child: Text(
                                       "Não tem Itens Registados",
-                                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant),
                                     ),
                                   ),
                                 )
@@ -335,67 +395,103 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                     CupertinoListSection.insetGrouped(
                                       header: Text(
                                         "Todos os Itens",
-                                        style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant),
                                       ),
                                       children: [
                                         ListView.builder(
                                           shrinkWrap: true,
-                                          physics: NeverScrollableScrollPhysics(), // Disable inner scrolling
+                                          physics:
+                                              NeverScrollableScrollPhysics(), // Disable inner scrolling
                                           itemCount: items.length,
                                           itemBuilder: (context, index) {
                                             var item = items[index];
                                             return CupertinoListTile(
                                               title: Text(
-                                                item['ItemName'] ?? 'Unknown Item',
-                                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                                item['ItemName'] ??
+                                                    'Unknown Item',
+                                                style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface),
                                               ),
                                               subtitle: Text(
                                                 "ID: ${item['IdItem']}",
-                                                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                                                style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary),
                                               ),
-                                              trailing: CupertinoListTileChevron(),
+                                              trailing:
+                                                  CupertinoListTileChevron(),
                                               onTap: () {
                                                 showCupertinoModalPopup(
                                                   context: context,
                                                   builder: (context) {
                                                     return CupertinoActionSheet(
                                                       title: Text(
-                                                        item['ItemName'] ?? 'Unknown Item',
-                                                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                                        item['ItemName'] ??
+                                                            'Unknown Item',
+                                                        style: TextStyle(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .onSurface),
                                                       ),
                                                       message: Text(
                                                         "ID: ${item['IdItem']}\n\nDetails:",
-                                                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.primary),
+                                                        style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .primary),
                                                       ),
                                                       actions: [
-                                                        ...item['DetailsList'].map<CupertinoActionSheetAction>((detail) {
+                                                        ...item['DetailsList']
+                                                            .map<CupertinoActionSheetAction>(
+                                                                (detail) {
                                                           return CupertinoActionSheetAction(
                                                             child: Text(
                                                               "${detail['DetailsName']}: ${detail['Details']}",
-                                                              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary),
+                                                              style: TextStyle(
+                                                                  fontSize: 12,
+                                                                  color: Theme.of(
+                                                                          context)
+                                                                      .colorScheme
+                                                                      .primary),
                                                             ),
                                                             onPressed: () {
-                                                              Navigator.pop(context);
+                                                              Navigator.pop(
+                                                                  context);
                                                             },
                                                           );
                                                         }).toList(),
                                                         TextButton(
                                                           onPressed: () {
-                                                            _deleteItem(item['IdItem'], context); // Pass the context here
+                                                            _deleteItem(
+                                                                item['IdItem'],
+                                                                context); // Pass the context here
                                                           },
                                                           child: Text(
                                                             "Remover Item do Evento",
                                                             style: TextStyle(
-                                                              color: CupertinoColors.destructiveRed,
+                                                              color: CupertinoColors
+                                                                  .destructiveRed,
                                                               fontSize: 12,
                                                             ),
                                                           ),
                                                         ),
                                                       ],
-                                                      cancelButton: CupertinoActionSheetAction(
+                                                      cancelButton:
+                                                          CupertinoActionSheetAction(
                                                         child: Text('Close'),
                                                         onPressed: () {
-                                                          Navigator.pop(context);
+                                                          Navigator.pop(
+                                                              context);
                                                         },
                                                       ),
                                                     );
@@ -412,7 +508,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                         CupertinoListTile.notched(
                                           title: Text(
                                             'Eliminar Evento',
-                                            style: TextStyle(color: CupertinoColors.destructiveRed),
+                                            style: TextStyle(
+                                                color: CupertinoColors
+                                                    .destructiveRed),
                                           ),
                                           onTap: _confirmDelete,
                                         ),
@@ -428,6 +526,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     );
   }
 }
+
 /*  TextButton(
                                                     onPressed: () {
                                                       _deleteItem(item['IdItem'], context); // Pass the context here
