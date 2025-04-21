@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:roominventory/locais/addLocal.dart';
+import 'package:roominventory/locais/addZona.dart';
 import 'dart:convert';
 import '../appbar/appbar.dart';
 import '../drawer/drawer.dart';
@@ -24,7 +26,8 @@ class _LocaisPageState extends State<LocaisPage> {
   Future<void> _fetchData() async {
     try {
       var response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {'query_param': 'P2'},
       );
 
@@ -56,7 +59,8 @@ class _LocaisPageState extends State<LocaisPage> {
             };
           }
 
-          if (!groupedData[idPlace]['Zones'][idZone]['Items'].containsKey(idItem)) {
+          if (!groupedData[idPlace]['Zones'][idZone]['Items']
+              .containsKey(idItem)) {
             groupedData[idPlace]['Zones'][idZone]['Items'][idItem] = {
               'IdItem': idItem,
               'ItemName': itemName,
@@ -64,7 +68,8 @@ class _LocaisPageState extends State<LocaisPage> {
             };
           }
 
-          groupedData[idPlace]['Zones'][idZone]['Items'][idItem]['Details'].add({
+          groupedData[idPlace]['Zones'][idZone]['Items'][idItem]['Details']
+              .add({
             'DetailsName': detailsName,
             'Details': detailsValue,
           });
@@ -80,12 +85,53 @@ class _LocaisPageState extends State<LocaisPage> {
     }
   }
 
+  void NavigateAdd() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: Text('Add New'),
+        message: Text('What would you like to add?'),
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text('Add Place'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (context) => AddPlacePage(),
+                ),
+              ).then((_) => _fetchData());
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: Text('Add Zone'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (context) => AddZonePage(),
+                ),
+              ).then((_) => _fetchData());
+            },
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          child: Text('Cancel'),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CustomNavigationBar(
         title: 'Locais',
         previousPageTitle: 'Inventário',
+        onAddPressed: NavigateAdd,
       ),
       child: SafeArea(
         child: Column(
@@ -110,17 +156,26 @@ class _LocaisPageState extends State<LocaisPage> {
                                   var zone = zoneEntry.value;
 
                                   // Filter items within the zone
-                                  var filteredItems = zone['Items'].entries.where((itemEntry) {
+                                  var filteredItems =
+                                      zone['Items'].entries.where((itemEntry) {
                                     var item = itemEntry.value;
 
                                     // Check if the search query matches ItemName or IdItem
-                                    return item['ItemName'].toLowerCase().contains(value.toLowerCase()) || item['IdItem'].toLowerCase().contains(value.toLowerCase());
+                                    return item['ItemName']
+                                            .toLowerCase()
+                                            .contains(value.toLowerCase()) ||
+                                        item['IdItem']
+                                            .toLowerCase()
+                                            .contains(value.toLowerCase());
                                   }).toList();
 
                                   // Check if the search query matches ZoneName
-                                  if (zone['ZoneName'].toLowerCase().contains(value.toLowerCase())) {
+                                  if (zone['ZoneName']
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase())) {
                                     // Include all items in the zone if the zone matches
-                                    filteredItems = zone['Items'].entries.toList();
+                                    filteredItems =
+                                        zone['Items'].entries.toList();
                                   }
 
                                   // Return the zone only if it has matching items or its name matches
@@ -139,10 +194,13 @@ class _LocaisPageState extends State<LocaisPage> {
                                 .toList();
 
                             // Explicitly cast filteredZones to List<MapEntry<dynamic, dynamic>>
-                            var filteredZonesMap = Map.fromEntries(filteredZones.cast<MapEntry<dynamic, dynamic>>());
+                            var filteredZonesMap = Map.fromEntries(filteredZones
+                                .cast<MapEntry<dynamic, dynamic>>());
 
                             // Check if the search query matches PlaceName
-                            if (place['PlaceName'].toLowerCase().contains(value.toLowerCase())) {
+                            if (place['PlaceName']
+                                .toLowerCase()
+                                .contains(value.toLowerCase())) {
                               // Include all zones in the place if the place matches
                               filteredZonesMap = place['Zones'];
                             }
@@ -173,7 +231,10 @@ class _LocaisPageState extends State<LocaisPage> {
                               "Não tem Eventos Registados",
                               style: TextStyle(
                                 fontSize: 16,
-                                color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                                color: CupertinoTheme.of(context)
+                                    .textTheme
+                                    .textStyle
+                                    .color,
                               ),
                             ),
                           ),
@@ -185,7 +246,11 @@ class _LocaisPageState extends State<LocaisPage> {
                             return CupertinoListSection(
                               header: Text(
                                 place['PlaceName'] ?? 'Unknown Place',
-                                style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface),
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                               children: [
                                 ...place['Zones'].entries.map((zoneEntry) {
@@ -193,45 +258,73 @@ class _LocaisPageState extends State<LocaisPage> {
                                   return CupertinoListSection.insetGrouped(
                                     header: Text(
                                       zone['ZoneName'] ?? 'Unknown Zone',
-                                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant),
                                     ),
                                     children: [
                                       ...zone['Items'].entries.map((itemEntry) {
                                         var item = itemEntry.value;
                                         return CupertinoListTile(
-                                          title: Text(item['ItemName'] ?? 'Unknown Item', style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
+                                          title: Text(
+                                              item['ItemName'] ??
+                                                  'Unknown Item',
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface)),
                                           subtitle: Text(
                                             "ID: ${item['IdItem']}",
-                                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary),
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary),
                                           ),
-                                          trailing: Icon(CupertinoIcons.chevron_forward),
+                                          trailing: Icon(
+                                              CupertinoIcons.chevron_forward),
                                           onTap: () {
                                             showCupertinoModalPopup(
                                               context: context,
                                               builder: (context) {
                                                 return CupertinoActionSheet(
                                                   title: Text(
-                                                    item['ItemName'] ?? 'Unknown Item',
-                                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                                    item['ItemName'] ??
+                                                        'Unknown Item',
+                                                    style: TextStyle(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface),
                                                   ),
                                                   message: Text(
                                                     "ID: ${item['IdItem']}\n\nDetails:",
-                                                    style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.primary),
+                                                    style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .primary),
                                                   ),
                                                   actions: [
-                                                    ...item['Details'].map((detail) {
+                                                    ...item['Details']
+                                                        .map((detail) {
                                                       return CupertinoActionSheetAction(
                                                         child: Text(
                                                           "${detail['DetailsName']}: ${detail['Details']}",
-                                                          style: TextStyle(fontSize: 12),
+                                                          style: TextStyle(
+                                                              fontSize: 12),
                                                         ),
                                                         onPressed: () {
-                                                          Navigator.pop(context);
+                                                          Navigator.pop(
+                                                              context);
                                                         },
                                                       );
                                                     }).toList(),
                                                   ],
-                                                  cancelButton: CupertinoActionSheetAction(
+                                                  cancelButton:
+                                                      CupertinoActionSheetAction(
                                                     child: Text('Close'),
                                                     onPressed: () {
                                                       Navigator.pop(context);

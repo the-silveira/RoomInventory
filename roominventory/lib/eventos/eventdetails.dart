@@ -138,11 +138,15 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
 
       if (response.statusCode == 200) {
         var responseBody = json.decode(response.body);
+        print(responseBody['status']);
         if (responseBody['status'] == 'success') {
           // Event deleted successfully
-          Navigator.pop(context); // Navigate back to the previous page
+
+          Navigator.pop(context, true);
+          Navigator.pop(context, true);
         } else {
           setState(() {
+            print("aaaaaaa");
             errorMessage = 'Failed to delete event: ${responseBody['message']}';
           });
         }
@@ -175,8 +179,10 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               style: TextStyle(color: CupertinoColors.destructiveRed),
             ),
             onPressed: () {
-              Navigator.pop(context); // Close the dialog
-              _deleteEvent(); // Delete the event
+              // Delete the event
+              _deleteEvent();
+
+              // Close the dialog
             },
           ),
         ],
@@ -285,7 +291,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     );
   }
 
-  _editEvent(dynamic event) {
+  void _editEvent(dynamic event) {
+    if (event == null) return;
+
     Navigator.push(
       context,
       CupertinoPageRoute(
@@ -369,155 +377,156 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                                           .colorScheme
                                           .onSurfaceVariant),
                                 ),
-                                CupertinoButton(
-                                    child:
-                                        Icon(CupertinoIcons.pencil, size: 20),
-                                    onPressed: _editEvent(event))
                               ],
                             ),
                           ),
-                          items.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Text(
-                                      "Não tem Itens Registados",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant),
-                                    ),
+                          if (items.isEmpty)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  "Não tem Itens Registados",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant),
+                                ),
+                              ),
+                            )
+                          else
+                            Column(
+                              children: [
+                                CupertinoListSection.insetGrouped(
+                                  header: Text(
+                                    "Todos os Itens",
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant),
                                   ),
-                                )
-                              : Column(
                                   children: [
-                                    CupertinoListSection.insetGrouped(
-                                      header: Text(
-                                        "Todos os Itens",
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant),
-                                      ),
-                                      children: [
-                                        ListView.builder(
-                                          shrinkWrap: true,
-                                          physics:
-                                              NeverScrollableScrollPhysics(), // Disable inner scrolling
-                                          itemCount: items.length,
-                                          itemBuilder: (context, index) {
-                                            var item = items[index];
-                                            return CupertinoListTile(
-                                              title: Text(
-                                                item['ItemName'] ??
-                                                    'Unknown Item',
-                                                style: TextStyle(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface),
-                                              ),
-                                              subtitle: Text(
-                                                "ID: ${item['IdItem']}",
-                                                style: TextStyle(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary),
-                                              ),
-                                              trailing:
-                                                  CupertinoListTileChevron(),
-                                              onTap: () {
-                                                showCupertinoModalPopup(
-                                                  context: context,
-                                                  builder: (context) {
-                                                    return CupertinoActionSheet(
-                                                      title: Text(
-                                                        item['ItemName'] ??
-                                                            'Unknown Item',
-                                                        style: TextStyle(
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .colorScheme
-                                                                .onSurface),
-                                                      ),
-                                                      message: Text(
-                                                        "ID: ${item['IdItem']}\n\nDetails:",
-                                                        style: TextStyle(
-                                                            fontSize: 14,
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .colorScheme
-                                                                .primary),
-                                                      ),
-                                                      actions: [
-                                                        ...item['DetailsList']
-                                                            .map<CupertinoActionSheetAction>(
-                                                                (detail) {
-                                                          return CupertinoActionSheetAction(
-                                                            child: Text(
-                                                              "${detail['DetailsName']}: ${detail['Details']}",
-                                                              style: TextStyle(
-                                                                  fontSize: 12,
-                                                                  color: Theme.of(
-                                                                          context)
-                                                                      .colorScheme
-                                                                      .primary),
-                                                            ),
-                                                            onPressed: () {
-                                                              Navigator.pop(
-                                                                  context);
-                                                            },
-                                                          );
-                                                        }).toList(),
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            _deleteItem(
-                                                                item['IdItem'],
-                                                                context); // Pass the context here
-                                                          },
-                                                          child: Text(
-                                                            "Remover Item do Evento",
-                                                            style: TextStyle(
-                                                              color: CupertinoColors
-                                                                  .destructiveRed,
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          NeverScrollableScrollPhysics(), // Disable inner scrolling
+                                      itemCount: items.length,
+                                      itemBuilder: (context, index) {
+                                        var item = items[index];
+                                        return CupertinoListTile(
+                                          title: Text(
+                                            item['ItemName'] ?? 'Unknown Item',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface),
+                                          ),
+                                          subtitle: Text(
+                                            "ID: ${item['IdItem']}",
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary),
+                                          ),
+                                          trailing: CupertinoListTileChevron(),
+                                          onTap: () {
+                                            showCupertinoModalPopup(
+                                              context: context,
+                                              builder: (context) {
+                                                return CupertinoActionSheet(
+                                                  title: Text(
+                                                    item['ItemName'] ??
+                                                        'Unknown Item',
+                                                    style: TextStyle(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface),
+                                                  ),
+                                                  message: Text(
+                                                    "ID: ${item['IdItem']}\n\nDetails:",
+                                                    style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .primary),
+                                                  ),
+                                                  actions: [
+                                                    ...item['DetailsList'].map<
+                                                            CupertinoActionSheetAction>(
+                                                        (detail) {
+                                                      return CupertinoActionSheetAction(
+                                                        child: Text(
+                                                          "${detail['DetailsName']}: ${detail['Details']}",
+                                                          style: TextStyle(
                                                               fontSize: 12,
-                                                            ),
-                                                          ),
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .primary),
                                                         ),
-                                                      ],
-                                                      cancelButton:
-                                                          CupertinoActionSheetAction(
-                                                        child: Text('Close'),
                                                         onPressed: () {
                                                           Navigator.pop(
                                                               context);
                                                         },
+                                                      );
+                                                    }).toList(),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        _deleteItem(
+                                                            item['IdItem'],
+                                                            context); // Pass the context here
+                                                      },
+                                                      child: Text(
+                                                        "Remover Item do Evento",
+                                                        style: TextStyle(
+                                                          color: CupertinoColors
+                                                              .destructiveRed,
+                                                          fontSize: 12,
+                                                        ),
                                                       ),
-                                                    );
-                                                  },
+                                                    ),
+                                                  ],
+                                                  cancelButton:
+                                                      CupertinoActionSheetAction(
+                                                    child: Text('Close'),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
                                                 );
                                               },
                                             );
                                           },
-                                        ),
-                                      ],
-                                    ),
-                                    CupertinoListSection(
-                                      children: [
-                                        CupertinoListTile.notched(
-                                          title: Text(
-                                            'Eliminar Evento',
-                                            style: TextStyle(
-                                                color: CupertinoColors
-                                                    .destructiveRed),
-                                          ),
-                                          onTap: _confirmDelete,
-                                        ),
-                                      ],
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
+                              ],
+                            ),
+                          CupertinoListSection(
+                            children: [
+                              CupertinoListTile.notched(
+                                title: Text(
+                                  'Editar Evento',
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ),
+                                onTap: () => _editEvent(event),
+                              ),
+                              CupertinoListTile.notched(
+                                title: Text(
+                                  'Eliminar Evento',
+                                  style: TextStyle(
+                                      color: CupertinoColors.destructiveRed),
+                                ),
+                                onTap: _confirmDelete,
+                              ),
+                            ],
+                          ),
                         ]),
                       ),
                     ],

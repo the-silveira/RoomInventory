@@ -15,7 +15,8 @@ class EventosPage extends StatefulWidget {
 class _EventosPageState extends State<EventosPage> {
   dynamic events = [];
   dynamic filteredEvents = []; // List for search results
-  TextEditingController searchController = TextEditingController(); // Search controller
+  TextEditingController searchController =
+      TextEditingController(); // Search controller
   bool isLoading = true;
   String errorMessage = '';
 
@@ -29,7 +30,8 @@ class _EventosPageState extends State<EventosPage> {
   Future<void> _fetchData() async {
     try {
       var response = await http.post(
-        Uri.parse('https://services.interagit.com/API/roominventory/api_ri.php'),
+        Uri.parse(
+            'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {'query_param': 'E1'},
       );
 
@@ -55,7 +57,8 @@ class _EventosPageState extends State<EventosPage> {
 
     setState(() {
       filteredEvents = events!.where((item) {
-        return item['IdEvent'].toLowerCase().contains(query.toLowerCase()) || item['EventName'].toLowerCase().contains(query.toLowerCase());
+        return item['IdEvent'].toLowerCase().contains(query.toLowerCase()) ||
+            item['EventName'].toLowerCase().contains(query.toLowerCase());
       }).toList();
     });
   }
@@ -93,7 +96,10 @@ class _EventosPageState extends State<EventosPage> {
     Navigator.push(
       context,
       CupertinoPageRoute(builder: (context) => AddEventPage()),
-    );
+    ).then((_) {
+      // This will run when the AddEventPage pops
+      _refreshData(); // Refresh your data
+    });
   }
 
   @override
@@ -126,7 +132,10 @@ class _EventosPageState extends State<EventosPage> {
                                   "Não tem Eventos Registados",
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: CupertinoTheme.of(context).textTheme.textStyle.color,
+                                    color: CupertinoTheme.of(context)
+                                        .textTheme
+                                        .textStyle
+                                        .color,
                                   ),
                                 ),
                               ),
@@ -134,7 +143,8 @@ class _EventosPageState extends State<EventosPage> {
                           : CustomScrollView(
                               slivers: [
                                 CupertinoSliverRefreshControl(
-                                  onRefresh: _refreshData, // Trigger refresh when pulled
+                                  onRefresh:
+                                      _refreshData, // Trigger refresh when pulled
                                 ),
                                 SliverList(
                                   delegate: SliverChildBuilderDelegate(
@@ -146,39 +156,61 @@ class _EventosPageState extends State<EventosPage> {
                                             title: Row(
                                               children: [
                                                 Text(
-                                                  event['EventName'].toString().isEmpty
+                                                  event['EventName']
+                                                          .toString()
+                                                          .isEmpty
                                                       ? 'Empty Name'
-                                                      : event['EventName'].toString().length > 35
-                                                          ? event['EventName'].toString().substring(0, 35) + "..."
+                                                      : event['EventName']
+                                                                  .toString()
+                                                                  .length >
+                                                              35
+                                                          ? event['EventName']
+                                                                  .toString()
+                                                                  .substring(
+                                                                      0, 35) +
+                                                              "..."
                                                           : event['EventName'],
                                                   style: TextStyle(
                                                     fontSize: 16,
-                                                    color: Theme.of(context).colorScheme.onSurface,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
                                                   ),
                                                 ),
                                                 Icon(
                                                   _getCardIcon(event['Date']),
-                                                  color: Theme.of(context).colorScheme.primary,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                 ),
                                               ],
                                             ),
                                             subtitle: Padding(
-                                              padding: EdgeInsets.only(bottom: 10), // Add padding above the subtitle
+                                              padding: EdgeInsets.only(
+                                                  bottom:
+                                                      10), // Add padding above the subtitle
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     "📍 ${event['EventPlace']}",
                                                     style: TextStyle(
-                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                       fontSize: 14,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 2), // Add spacing between lines
+                                                  SizedBox(
+                                                      height:
+                                                          2), // Add spacing between lines
                                                   Text(
                                                     "👤 ${event['NameRep']}",
                                                     style: TextStyle(
-                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                       fontSize: 14,
                                                     ),
                                                   ),
@@ -186,7 +218,9 @@ class _EventosPageState extends State<EventosPage> {
                                                   Text(
                                                     "📧 ${event['EmailRep']}",
                                                     style: TextStyle(
-                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                       fontSize: 14,
                                                     ),
                                                   ),
@@ -194,7 +228,9 @@ class _EventosPageState extends State<EventosPage> {
                                                   Text(
                                                     "🛠 ${event['TecExt']}",
                                                     style: TextStyle(
-                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                       fontSize: 14,
                                                     ),
                                                   ),
@@ -202,7 +238,9 @@ class _EventosPageState extends State<EventosPage> {
                                                   Text(
                                                     "📅 Date: ${event['Date']}",
                                                     style: TextStyle(
-                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                       fontSize: 14,
                                                     ),
                                                   ),
@@ -210,7 +248,9 @@ class _EventosPageState extends State<EventosPage> {
                                                   Text(
                                                     "ID: ${event['IdEvent']}",
                                                     style: TextStyle(
-                                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                       fontSize: 14,
                                                     ),
                                                   ),
@@ -221,9 +261,15 @@ class _EventosPageState extends State<EventosPage> {
                                               Navigator.push(
                                                 context,
                                                 CupertinoPageRoute(
-                                                  builder: (context) => EventDetailsPage(eventId: event['IdEvent']),
+                                                  builder: (context) =>
+                                                      EventDetailsPage(
+                                                          eventId:
+                                                              event['IdEvent']),
                                                 ),
-                                              );
+                                              ).then((_) {
+                                                _fetchData(); // Only refresh if needed
+                                              });
+                                              ;
                                             },
                                           ),
                                         ],

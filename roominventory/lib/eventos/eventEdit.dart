@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:roominventory/appbar/appbar.dart';
+
 class EditEventPage extends StatefulWidget {
   final dynamic event;
 
@@ -56,7 +58,7 @@ class _EditEventPageState extends State<EditEventPage> {
         Uri.parse(
             'https://services.interagit.com/API/roominventory/api_ri.php'),
         body: {
-          'query_param': 'E4', // Assuming E4 is for updating events
+          'query_param': 'E7', // Assuming E4 is for updating events
           'IdEvent': widget.event['IdEvent'],
           'EventName': _eventNameController.text,
           'EventPlace': _eventPlaceController.text,
@@ -152,22 +154,15 @@ class _EditEventPageState extends State<EditEventPage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('Edit Event'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          child: _isSaving
-              ? CupertinoActivityIndicator()
-              : Text('Save',
-                  style: TextStyle(color: CupertinoColors.activeBlue)),
-          onPressed: _isSaving ? null : _saveChanges,
-        ),
+      navigationBar: CustomNavigationBar(
+        title: 'Eventos',
+        previousPageTitle: 'Inventário',
+        onAddPressed: _saveChanges,
       ),
       child: SafeArea(
         child: ListView(
-          padding: EdgeInsets.all(16),
           children: [
-            CupertinoFormSection(
+            CupertinoFormSection.insetGrouped(
               header: Text('Event Details'),
               children: [
                 CupertinoTextFormFieldRow(
