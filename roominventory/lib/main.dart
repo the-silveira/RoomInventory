@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:roominventory/drawer/drawer.dart';
@@ -38,7 +39,8 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: CupertinoColors.activeBlue,
+          primary: CupertinoColors.activeBlue,
           brightness: Brightness.light, // Light theme
         ),
         textTheme: const TextTheme(
@@ -48,7 +50,8 @@ class _MyAppState extends State<MyApp> {
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: CupertinoColors.activeBlue,
+          primary: CupertinoColors.activeBlue,
           brightness: Brightness.dark, // Dark theme
         ),
         textTheme: TextTheme(
