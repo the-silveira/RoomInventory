@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:roominventory/dimmers/dimmerPage.dart';
 import 'calendar.dart';
 import '/eventos/eventos.dart';
 import '/itens/itens.dart';
@@ -96,6 +97,25 @@ class _OptionsPageState extends State<OptionsPage> {
                     );
                   },
                 ),
+                CupertinoListTile.notched(
+                  title: Text(
+                    'Dimmers',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  leading: Icon(
+                    CupertinoIcons.cube_box_fill,
+                    color: CupertinoColors.systemBlue,
+                  ),
+                  trailing: CupertinoListTileChevron(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (context) => DMXConfigPage()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -107,7 +127,8 @@ class _OptionsPageState extends State<OptionsPage> {
                 CupertinoListTile.notched(
                   title: Text(
                     'Definições',
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface),
                   ),
                   leading: Icon(
                     CupertinoIcons.settings,
