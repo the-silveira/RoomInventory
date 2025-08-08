@@ -101,6 +101,32 @@ CREATE TABLE Item_Event (
     FOREIGN KEY (FK_IdEvent) REFERENCES Events(IdEvent)
 );
 
+CREATE TABLE Channels (
+    IdChannel INT AUTO_INCREMENT PRIMARY KEY,
+    Position VARCHAR(10) NOT NULL UNIQUE,
+    Type ENUM('fixture', 'dmx') NOT NULL,
+    State ENUM('disconnected', 'broken', 'connected') NOT NULL
+);
+
+CREATE TABLE Connections (
+    IdConnection INT AUTO_INCREMENT PRIMARY KEY,
+    Source_channel_id INT NOT NULL,
+    Target_channel_id INT NOT NULL,
+    FOREIGN KEY (source_channel_id) REFERENCES Channels(IdChannel) ON DELETE CASCADE,
+    FOREIGN KEY (target_channel_id) REFERENCES Channels(IdChannel) ON DELETE CASCADE,
+    UNIQUE KEY unique_connection (source_channel_id, target_channel_id)
+);
+
+
+
+
+
+
+
+
+
+
+
 INSERT INTO Permissions VALUES 
 (1, 'See Events'),
 (2, 'Full Control on Events'),
@@ -1441,3 +1467,32 @@ INSERT INTO Item_Event (FK_IdEvent, FK_IdItem) VALUES
 ("TEAT_01", "MSCH_SM58"),
 ("TEAT_01", "DIBH_01"),
 ("TEAT_01", "DIBH_02");
+
+
+
+-- Insert Fixture Channels (A1-E12)
+INSERT INTO Channels (Position, Type) VALUES 
+('FX_A1', 'fixture'), ('FX_A2', 'fixture'), ('FX_A3', 'fixture'), ('FX_A4', 'fixture'),
+('FX_A5', 'fixture'), ('FX_A6', 'fixture'), ('FX_A7', 'fixture'), ('FX_A8', 'fixture'),
+('FX_A9', 'fixture'), ('FX_A10', 'fixture'), ('FX_A11', 'fixture'), ('FX_A12', 'fixture'),
+('FX_B1', 'fixture'), ('FX_B2', 'fixture'), ('FX_B3', 'fixture'), ('FX_B4', 'fixture'),
+('FX_B5', 'fixture'), ('FX_B6', 'fixture'), ('FX_B7', 'fixture'), ('FX_B8', 'fixture'),
+('FX_B9', 'fixture'), ('FX_B10', 'fixture'), ('FX_B11', 'fixture'), ('FX_B12', 'fixture'),
+('FX_C1', 'fixture'), ('FX_C2', 'fixture'), ('FX_C3', 'fixture'), ('FX_C4', 'fixture'),
+('FX_C5', 'fixture'), ('FX_C6', 'fixture'), ('FX_C7', 'fixture'), ('FX_C8', 'fixture'),
+('FX_C9', 'fixture'), ('FX_C10', 'fixture'), ('FX_C11', 'fixture'), ('FX_C12', 'fixture'),
+('FX_D1', 'fixture'), ('FX_D2', 'fixture'), ('FX_D3', 'fixture'), ('FX_D4', 'fixture'),
+('FX_D5', 'fixture'), ('FX_D6', 'fixture'), ('FX_D7', 'fixture'), ('FX_D8', 'fixture'),
+('FX_D9', 'fixture'), ('FX_D10', 'fixture'), ('FX_D11', 'fixture'), ('FX_D12', 'fixture'),
+('FX_E1', 'fixture'), ('FX_E2', 'fixture'), ('FX_E3', 'fixture'), ('FX_E4', 'fixture'),
+('FX_E5', 'fixture'), ('FX_E6', 'fixture'), ('FX_E7', 'fixture'), ('FX_E8', 'fixture'),
+('FX_E9', 'fixture'), ('FX_E10', 'fixture'), ('FX_E11', 'fixture'), ('FX_E12', 'fixture');
+
+-- Insert DMX Channels (R1_1-R2_12)
+INSERT INTO Channels (Position, type) VALUES 
+('DMX_R1_1', 'dmx'), ('DMX_R1_2', 'dmx'), ('DMX_R1_3', 'dmx'), ('DMX_R1_4', 'dmx'),
+('DMX_R1_5', 'dmx'), ('DMX_R1_6', 'dmx'), ('DMX_R1_7', 'dmx'), ('DMX_R1_8', 'dmx'),
+('DMX_R1_9', 'dmx'), ('DMX_R1_10', 'dmx'), ('DMX_R1_11', 'dmx'), ('DMX_R1_12', 'dmx'),
+('DMX_R2_1', 'dmx'), ('DMX_R2_2', 'dmx'), ('DMX_R2_3', 'dmx'), ('DMX_R2_4', 'dmx'),
+('DMX_R2_5', 'dmx'), ('DMX_R2_6', 'dmx'), ('DMX_R2_7', 'dmx'), ('DMX_R2_8', 'dmx'),
+('DMX_R2_9', 'dmx'), ('DMX_R2_10', 'dmx'), ('DMX_R2_11', 'dmx'), ('DMX_R2_12', 'dmx');
