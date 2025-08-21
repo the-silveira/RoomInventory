@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
@@ -37,23 +36,22 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
       if (response.statusCode == 200) {
         final dynamic eventsJson = json.decode(response.body);
-        //print('API Response: $eventsJson'); // Debug: Print API response
 
         setState(() {
           _events = {
             for (var event in eventsJson)
               _normalizeDate(DateTime.parse(event['Date'])): [
                 Event(
-                    event['IdEvent'],
-                    event['EventName'],
-                    event['EventPlace'],
-                    event['NameRep'],
-                    event['EmailRep'],
-                    event['TecExt'],
-                    event['Date'])
+                  event['IdEvent'],
+                  event['EventName'],
+                  event['EventPlace'],
+                  event['NameRep'],
+                  event['EmailRep'],
+                  event['TecExt'],
+                  event['Date'],
+                )
               ]
           };
-          //print('Events Map: $_events'); // Debug: Print events map
         });
       } else {
         print('Failed to fetch data: ${response.statusCode}');
@@ -65,6 +63,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: Column(
         children: [
@@ -79,44 +79,49 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
                 _selectedEvents = _events[_normalizeDate(selectedDay)] ?? [];
-                //print('Selected Events: $_selectedEvents'); // Debug: Print selected events
               });
             },
             onFormatChanged: (format) {
-              setState(() {
-                _calendarFormat = format;
-              });
+              setState(() => _calendarFormat = format);
             },
             onPageChanged: (focusedDay) {
-              setState(() {
-                _focusedDay = focusedDay;
-              });
+              setState(() => _focusedDay = focusedDay);
             },
             eventLoader: (day) {
-              final events = _events[_normalizeDate(day)] ?? [];
-              //print('Events for $day: $events'); // Debug: Print events for the day
-              return events;
+              return _events[_normalizeDate(day)] ?? [];
             },
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: scheme.primary,
                 shape: BoxShape.circle,
               ),
-              todayTextStyle:
-                  TextStyle(color: Theme.of(context).colorScheme.surface),
+              todayTextStyle: TextStyle(color: scheme.onPrimary),
               selectedDecoration: BoxDecoration(
-                color: CupertinoColors.activeBlue,
+                color: scheme.secondary,
+                shape: BoxShape.circle,
+              ),
+              markerDecoration: BoxDecoration(
+                color: scheme.primary,
                 shape: BoxShape.circle,
               ),
               markersMaxCount: 3,
-              markerDecoration: BoxDecoration(
-                color: CupertinoColors.activeBlue,
-                shape: BoxShape.circle,
-              ),
             ),
             headerStyle: HeaderStyle(
               formatButtonVisible: true,
               titleCentered: true,
+              titleTextStyle: TextStyle(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              formatButtonTextStyle: TextStyle(color: scheme.primary),
+              formatButtonDecoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: scheme.primary),
+              ),
+              leftChevronIcon: Icon(Icons.chevron_left, color: scheme.primary),
+              rightChevronIcon:
+                  Icon(Icons.chevron_right, color: scheme.primary),
             ),
           ),
           Expanded(
@@ -124,80 +129,36 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 ? Center(
                     child: Text(
                       'No events for the selected day',
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface),
+                      style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
                   )
                 : ListView.builder(
                     itemCount: _selectedEvents.length,
                     itemBuilder: (context, index) {
                       final event = _selectedEvents[index];
-                      return ListTile(
-                        title: Text(event.EventName),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              "📍 ${event.IdEvent}",
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 14,
-                              ),
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        elevation: 2,
+                        child: ListTile(
+                          title: Text(
+                            event.EventName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: scheme.onSurface,
                             ),
-                            SizedBox(height: 2), // Add spacing between lines
-                            Text(
-                              "👤 ${event.NameRep}",
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              "📧 ${event.EmailRep}",
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              "🛠 ${event.TecExt}",
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              "📅 Date: ${event.Date}",
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              "ID: ${event.IdEvent}",
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _eventDetail("📍", event.EventPlace, scheme),
+                              _eventDetail("👤", event.NameRep, scheme),
+                              _eventDetail("📧", event.EmailRep, scheme),
+                              _eventDetail("🛠", event.TecExt, scheme),
+                              _eventDetail("📅", event.Date, scheme),
+                              _eventDetail("ID:", event.IdEvent, scheme),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -207,12 +168,32 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       ),
     );
   }
+
+  Widget _eventDetail(String label, String value, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        "$label $value",
+        style: TextStyle(
+          color: scheme.onSurfaceVariant,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
 }
 
-// Event class
+// Event model
 class Event {
   final String IdEvent, EventName, EventPlace, NameRep, EmailRep, TecExt, Date;
 
-  Event(this.IdEvent, this.EventName, this.EventPlace, this.NameRep,
-      this.EmailRep, this.TecExt, this.Date);
+  Event(
+    this.IdEvent,
+    this.EventName,
+    this.EventPlace,
+    this.NameRep,
+    this.EmailRep,
+    this.TecExt,
+    this.Date,
+  );
 }

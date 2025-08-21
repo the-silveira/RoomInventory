@@ -204,7 +204,11 @@ class _SettingsPageState extends State<SettingsPage> {
                             Text('Signing in...'),
                           ],
                         )
-                      : Text('Sign In with Google'),
+                      : Text(
+                          'Sign In with Google',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface),
+                        ),
                   trailing: Icon(CupertinoIcons.person_crop_circle_badge_plus),
                   onTap: _isLoading ? null : _handleSignIn,
                 ),
