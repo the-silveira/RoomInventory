@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:roominventory/drawer/drawer.dart';
+import 'package:roominventory/themes.dart';
 import 'definicoes/provider.dart'; // Import the ThemeProvider
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -36,30 +37,10 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       title: 'Room Inventory',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: CupertinoColors.activeBlue,
-          primary: CupertinoColors.activeBlue,
-          brightness: Brightness.light, // Light theme
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black), // Custom text color
-        ),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: CupertinoColors.activeBlue,
-          primary: CupertinoColors.activeBlue,
-          brightness: Brightness.dark, // Dark theme
-        ),
-        textTheme: TextTheme(
-          bodyLarge:
-              TextStyle(color: Colors.white), // Custom text color for dark mode
-        ),
-      ),
+      theme: AppThemes.lightTheme,
+      darkTheme: AppThemes.darkTheme,
       themeMode: themeProvider.themeMode, // Use the selected theme mode
+
       home: OptionsPage(), // Directly navigate to OptionsPage
     );
   }

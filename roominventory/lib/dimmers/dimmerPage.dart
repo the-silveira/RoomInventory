@@ -1,28 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:roominventory/appbar/appbar_back.dart';
 import 'dart:convert';
-import 'dart:developer' as developer;
-
-void main() {
-  runApp(const DMXConfigApp());
-}
-
-class DMXConfigApp extends StatelessWidget {
-  const DMXConfigApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const CupertinoApp(
-      title: 'DMX Board Config',
-      theme: CupertinoThemeData(
-        brightness: Brightness.light,
-        primaryColor: CupertinoColors.systemBlue,
-      ),
-      home: DMXConfigPage(),
-    );
-  }
-}
 
 /// Data Models
 class DMXChannel {
@@ -46,173 +26,6 @@ class DMXChannel {
 }
 
 enum ConnectionState { disconnected, connected, broken }
-
-/// Widget Components
-class DMXOutputGrid extends StatelessWidget {
-  final String title;
-  final List<String> rowLabels;
-  final int columns;
-  final List<List<ConnectionState>> states;
-  final Map<String, String> connections;
-  final String? connectingFrom;
-  final AnimationController blinkController;
-  final Function(int, int) onTap;
-  final Function(String, int, int)? onLongPress;
-  final bool showIncomingConnections;
-
-  const DMXOutputGrid({
-    super.key,
-    required this.title,
-    required this.rowLabels,
-    required this.columns,
-    required this.states,
-    required this.connections,
-    required this.connectingFrom,
-    required this.blinkController,
-    required this.onTap,
-    this.onLongPress,
-    this.showIncomingConnections = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: CupertinoColors.label,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
-            border: Border.all(color: CupertinoColors.systemGrey4),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: List.generate(rowLabels.length, (rowIndex) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 28,
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          rowLabels[rowIndex],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: CupertinoColors.secondaryLabel,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ),
-                  ...List.generate(columns, (colIndex) {
-                    final spaceNumber = colIndex + 1;
-                    final key = title == 'Fixture Outputs'
-                        ? 'first_${rowLabels[rowIndex]}_$spaceNumber'
-                        : 'second_${rowLabels[rowIndex]}_$spaceNumber';
-                    final isConnected = showIncomingConnections
-                        ? connections.containsValue(key)
-                        : connections.containsKey(key);
-                    final connectionInfo = isConnected
-                        ? (showIncomingConnections
-                            ? connections.entries
-                                .firstWhere((e) => e.value == key)
-                                .key
-                            : connections[key])
-                        : null;
-
-                    return Flexible(
-                      child: GestureDetector(
-                        onTap: () => onTap(rowIndex, colIndex),
-                        onLongPress: onLongPress != null
-                            ? () => onLongPress!(key, rowIndex, colIndex)
-                            : null,
-                        child: AnimatedBuilder(
-                          animation: blinkController,
-                          builder: (context, child) {
-                            return Container(
-                              margin: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: connectingFrom == key
-                                    ? blinkController.value > 0.5
-                                        ? CupertinoColors.systemYellow
-                                        : CupertinoColors.systemGrey
-                                    : _getStateColor(states[rowIndex][colIndex],
-                                        isConnected),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              height: 40,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      '$spaceNumber',
-                                      style: const TextStyle(
-                                        color: CupertinoColors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (isConnected && connectionInfo != null)
-                                      Text(
-                                        showIncomingConnections
-                                            ? '←${connectionInfo.split('_').sublist(1).join('')}'
-                                            : '→${connectionInfo.split('_').sublist(1).join('')}',
-                                        style: const TextStyle(
-                                          color: CupertinoColors.white,
-                                          fontSize: 10,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              );
-            }),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getStateColor(ConnectionState state, bool isConnected) {
-    if (isConnected) return CupertinoColors.systemBlue;
-    switch (state) {
-      case ConnectionState.connected:
-        return CupertinoColors.systemGreen;
-      case ConnectionState.disconnected:
-        return CupertinoColors.systemGrey;
-      case ConnectionState.broken:
-        return CupertinoColors.systemRed;
-    }
-  }
-}
 
 /// Main Page
 class DMXConfigPage extends StatefulWidget {
@@ -244,6 +57,8 @@ class _DMXConfigPageState extends State<DMXConfigPage>
     secondAreaRows,
     (_) => List.filled(secondAreaCols, ConnectionState.disconnected),
   );
+  bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -263,6 +78,11 @@ class _DMXConfigPageState extends State<DMXConfigPage>
 
   Future<void> _loadChannels() async {
     try {
+      setState(() {
+        isLoading = true;
+        errorMessage = '';
+      });
+
       final response = await http.post(
         Uri.parse(
             'https://services.interagit.com/API/roominventory/api_ri.php'),
@@ -279,10 +99,18 @@ class _DMXConfigPageState extends State<DMXConfigPage>
           _updateChannelStates();
         });
       } else {
-        _showError('Failed to load channels: ${response.statusCode}');
+        setState(() {
+          errorMessage = 'Failed to load channels: ${response.statusCode}';
+        });
       }
     } catch (e) {
-      _showError('Error loading channels: $e');
+      setState(() {
+        errorMessage = 'Error loading channels: $e';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -342,8 +170,6 @@ class _DMXConfigPageState extends State<DMXConfigPage>
         },
       };
 
-      developer.log('Saving payload: ${json.encode(payload)}');
-
       // Send to API
       final response = await http.post(
         Uri.parse(
@@ -395,7 +221,6 @@ class _DMXConfigPageState extends State<DMXConfigPage>
       }
       throw FormatException('Unknown key type: $key');
     } catch (e) {
-      developer.log('Error getting channel ID from key $key: $e');
       rethrow;
     }
   }
@@ -476,21 +301,6 @@ class _DMXConfigPageState extends State<DMXConfigPage>
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(message), backgroundColor: CupertinoColors.systemRed),
-    );
-    developer.log(message);
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(message), backgroundColor: CupertinoColors.systemGreen),
-    );
-  }
-
   void _handleFirstAreaTap(int row, int col) {
     final key = 'first_${firstAreaRows[row]}_${col + 1}';
 
@@ -568,167 +378,125 @@ class _DMXConfigPageState extends State<DMXConfigPage>
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text('DMX Board Configuration'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: const Icon(CupertinoIcons.refresh, size: 28),
-              onPressed: _loadChannels,
-            ),
-            const SizedBox(width: 8),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: const Icon(CupertinoIcons.add, size: 28),
-              onPressed: _saveConfiguration,
-            ),
-          ],
-        ),
+      navigationBar: AddNavigationBar(
+        title: 'Dimmers',
+        previousPageTitle: 'Inventário',
+        onAddPressed: _saveConfiguration,
       ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Status Bar
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemGrey6,
-                border: Border(
-                  bottom: BorderSide(
-                    color: CupertinoColors.systemGrey4,
-                    width: 0.5,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    CupertinoIcons.circle_fill,
-                    size: 12,
-                    color: _connectingFrom != null
-                        ? CupertinoColors.systemYellow
-                        : CupertinoColors.systemGreen,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _connectingFrom != null
-                        ? 'Select target DMX port'
-                        : 'Ready to configure',
-                    style: TextStyle(
-                      color: CupertinoColors.label,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      child: Material(
+        color: Theme.of(context).colorScheme.background,
+        child: SafeArea(
+          child: Column(
+            children: [
+              isLoading
+                  ? const Center(child: CupertinoActivityIndicator())
+                  : errorMessage.isNotEmpty
+                      ? Center(
+                          child: Text(
+                            errorMessage,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        )
+                      : Expanded(
+                          child: CupertinoScrollbar(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Fixture Outputs - iOS Style
+                                  CupertinoListSection.insetGrouped(
+                                    header: Text(
+                                      "Barramento de Palco",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                    ),
+                                    children: [
+                                      _buildIOSPortGrid(
+                                        rowLabels: firstAreaRows,
+                                        columns: firstAreaCols,
+                                        states: _firstAreaStates,
+                                        isSource: true,
+                                      ),
+                                    ],
+                                  ),
 
-            // Main Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Fixture Outputs
-                    _buildSectionHeader(
-                        'Fixture Outputs', 'Long press to connect'),
-                    const SizedBox(height: 12),
-                    _buildPortGrid(
-                      rowLabels: firstAreaRows,
-                      columns: firstAreaCols,
-                      states: _firstAreaStates,
-                      isSource: true,
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // DMX Outputs
-                    _buildSectionHeader('DMX Outputs', 'Tap to disconnect'),
-                    const SizedBox(height: 12),
-                    _buildPortGrid(
-                      rowLabels: secondAreaRowLabels,
-                      columns: secondAreaCols,
-                      states: _secondAreaStates,
-                      isSource: false,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Action Buttons
-          ],
+                                  // DMX Outputs - iOS Style
+                                  CupertinoListSection.insetGrouped(
+                                    header: Text(
+                                      "Outputs DMX",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                    ),
+                                    children: [
+                                      _buildIOSPortGrid(
+                                        rowLabels: secondAreaRowLabels,
+                                        columns: secondAreaCols,
+                                        states: _secondAreaStates,
+                                        isSource: false,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, String subtitle) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: CupertinoColors.label,
-          ),
-        ),
-        Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 13,
-            color: CupertinoColors.secondaryLabel,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPortGrid({
+  Widget _buildIOSPortGrid({
     required List<String> rowLabels,
     required int columns,
     required List<List<ConnectionState>> states,
     required bool isSource,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: CupertinoColors.systemGrey4,
-          width: 1,
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(
+          vertical: 8, horizontal: 8), // ← Added horizontal padding
       child: Column(
         children: rowLabels.map((label) {
           final rowIndex = rowLabels.indexOf(label);
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              vertical: 6,
+            ),
             child: Column(
               children: [
-                // Row Label
                 Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 15, bottom: 1),
+                  padding: const EdgeInsets.only(left: 8),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       label,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: CupertinoColors.label,
-                          fontSize: 20),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+
                 // Ports Row
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 2), // ← Added padding to the row
                   child: Row(
                     children: List.generate(columns, (colIndex) {
                       final portNumber = colIndex + 1;
@@ -741,7 +509,8 @@ class _DMXConfigPageState extends State<DMXConfigPage>
 
                       return Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 2), // ← Increased horizontal padding
                           child: GestureDetector(
                             onTap: () => isSource
                                 ? _handleFirstAreaTap(rowIndex, colIndex)
@@ -751,15 +520,18 @@ class _DMXConfigPageState extends State<DMXConfigPage>
                                     key, rowIndex, colIndex)
                                 : null,
                             child: Container(
-                              height: 36,
+                              height: 40, // ← Slightly increased height
                               decoration: BoxDecoration(
                                 color: _getPortColor(
                                     states[rowIndex][colIndex], isConnected),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: CupertinoColors.systemGrey4,
-                                  width: 0.5,
-                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 2,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
                               ),
                               child: Center(
                                 child: Text(
@@ -789,25 +561,45 @@ class _DMXConfigPageState extends State<DMXConfigPage>
   }
 
   Color _getPortColor(ConnectionState state, bool isConnected) {
-    if (isConnected) return CupertinoColors.systemBlue;
+    if (isConnected) return Theme.of(context).colorScheme.primary;
     switch (state) {
       case ConnectionState.connected:
-        return CupertinoColors.systemGreen;
+        return Theme.of(context).colorScheme.tertiary;
       case ConnectionState.disconnected:
-        return CupertinoColors.systemBackground;
+        return Theme.of(context).colorScheme.surfaceContainerLowest;
       case ConnectionState.broken:
-        return CupertinoColors.systemRed;
+        return Theme.of(context).colorScheme.error;
     }
   }
 
   Color _getPortTextColor(ConnectionState state, bool isConnected) {
-    // White text for colored backgrounds
-    if (isConnected ||
-        state == ConnectionState.connected ||
-        state == ConnectionState.broken) {
-      return CupertinoColors.white;
+    if (isConnected || state == ConnectionState.connected) {
+      return Theme.of(context).colorScheme.onPrimary;
     }
-    // Dark text for light backgrounds
-    return CupertinoColors.label;
+    if (state == ConnectionState.broken) {
+      return Theme.of(context).colorScheme.onError;
+    }
+    return Theme.of(context).colorScheme.onSurface;
+  }
+
+// Also update your snackbar methods to use theme colors
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.tertiary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 }
