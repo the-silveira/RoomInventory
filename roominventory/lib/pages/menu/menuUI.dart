@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/menu/menuController.dart';
-import 'package:roominventory/menu/menuWidgets.dart';
+import 'package:roominventory/pages/menu/menuController.dart';
+import 'package:roominventory/pages/menu/menuWidgets.dart';
 
 class MenuPage extends StatefulWidget {
   @override

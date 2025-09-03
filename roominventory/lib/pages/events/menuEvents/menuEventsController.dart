@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:roominventory/events/addEvents.dart/addEventsUI.dart';
-import 'package:roominventory/events/detailsEvents/detailsEventsUI.dart';
+import 'package:roominventory/pages/events/addEvents.dart/addEventsUI.dart';
+import 'package:roominventory/pages/events/detailsEvents/detailsEventsUI.dart';
 
 class menuEventosController {
   dynamic events = [];

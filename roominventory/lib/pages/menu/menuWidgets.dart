@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/drawer/calendar.dart';
-import 'package:roominventory/menu/menuController.dart';
+import 'package:roominventory/globalWidgets/calendar/calendar.dart';
+import 'package:roominventory/pages/menu/menuController.dart';
 
 class NavigationSection extends StatelessWidget {
   final MenuPageController controller;

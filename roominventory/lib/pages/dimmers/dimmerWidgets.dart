@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart' hide ConnectionState;
 import 'package:flutter/material.dart' hide ConnectionState;
-import 'package:roominventory/dimmers/dimmerController.dart';
-import 'package:roominventory/classes/ConnectionState.dart';
+import 'package:roominventory/pages/dimmers/dimmerController.dart';
+import 'package:roominventory/classes/connectionState.dart';
 
 class IOSPortGrid extends StatelessWidget {
   final DMXConfigController controller;

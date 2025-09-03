@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/events/menuEvents/menuEventsController.dart';
+import 'package:roominventory/pages/events/menuEvents/menuEventsController.dart';
 
 class EventSearchBar extends StatelessWidget {
   final TextEditingController controller;

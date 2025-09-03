@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
-import 'package:roominventory/appbar/appbar_back.dart';
-import 'package:roominventory/events/addItemEvents/addItemEventsController.dart';
-import 'package:roominventory/events/addItemEvents/addItemEventsWidgets.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar_back.dart';
+import 'package:roominventory/pages/events/addItemEvents/addItemEventsController.dart';
+import 'package:roominventory/pages/events/addItemEvents/addItemEventsWidgets.dart';
 
 class addItemEventsPage extends StatefulWidget {
   final String eventId;

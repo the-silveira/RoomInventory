@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
-import 'package:roominventory/events/addItemEvents/addItemEventsController.dart';
+import 'package:roominventory/pages/events/addItemEvents/addItemEventsController.dart';
 
 class SearchBarWithQR extends StatelessWidget {
   final TextEditingController searchController;

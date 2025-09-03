@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/appbar/appbar_back.dart';
-import 'package:roominventory/events/addEvents.dart/addEventsController.dart';
-import 'package:roominventory/events/addEvents.dart/addEventsWidgets.dart';
-import 'package:roominventory/events/addItemEvents/addItemEventsWidgets.dart'
+import 'package:roominventory/globalWidgets/appbar/appbar_back.dart';
+import 'package:roominventory/pages/events/addEvents.dart/addEventsController.dart';
+import 'package:roominventory/pages/events/addEvents.dart/addEventsWidgets.dart';
+import 'package:roominventory/pages/events/addItemEvents/addItemEventsWidgets.dart'
     hide ErrorMessage;
 
 class AddEventPage extends StatefulWidget {

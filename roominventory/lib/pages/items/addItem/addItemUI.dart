@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide DatePickerDialog;
-import 'package:roominventory/appbar/appbar_back.dart';
-import 'package:roominventory/items/addItem/addItemController.dart';
-import 'package:roominventory/items/addItem/addItemWidgets.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar_back.dart';
+import 'package:roominventory/pages/items/addItem/addItemController.dart';
+import 'package:roominventory/pages/items/addItem/addItemWidgets.dart';
 
 class AddItemPage extends StatefulWidget {
   @override

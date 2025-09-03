@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/appbar/appbar.dart';
-import 'package:roominventory/events/detailsEvents/detailsEventsController.dart';
-import 'package:roominventory/events/detailsEvents/detailsEventsWidgets.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar.dart';
+import 'package:roominventory/pages/events/detailsEvents/detailsEventsController.dart';
+import 'package:roominventory/pages/events/detailsEvents/detailsEventsWidgets.dart';
 
 class detailsEventsPage extends StatefulWidget {
   final String eventId;
