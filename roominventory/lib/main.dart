@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:roominventory/drawer/drawer.dart';
-import 'package:roominventory/themes.dart';
-import 'definicoes/provider.dart'; // Import the ThemeProvider
+
+import 'package:roominventory/pages/menu/menuUI.dart';
+import 'package:roominventory/classes/themes.dart';
+import 'classes/provider.dart'; // Import the ThemeProvider
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'classes/firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +42,7 @@ class _MyAppState extends State<MyApp> {
       darkTheme: AppThemes.darkTheme,
       themeMode: themeProvider.themeMode, // Use the selected theme mode
 
-      home: OptionsPage(), // Directly navigate to OptionsPage
+      home: MenuPage(), // Directly navigate to OptionsPage
     );
   }
 }
