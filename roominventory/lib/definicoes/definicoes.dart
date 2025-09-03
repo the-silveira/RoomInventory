@@ -74,29 +74,34 @@ class _SettingsPageState extends State<SettingsPage> {
 
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User cancelled
+      }
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      final AuthCredential credential = GoogleAuthProvider.credential(
+      final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      await _auth.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Signed in as ${googleUser.email}')),
-      );
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign in failed: $error')),
-      );
-    } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Signed in as ${googleUser.email}')),
+        );
       }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign in failed: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -303,15 +308,15 @@ class _SettingsPageState extends State<SettingsPage> {
         await FileSaver.instance.saveAs(
           name: 'room_inventory_events',
           bytes: bytes,
-          ext: 'ics',
           mimeType: MimeType.other,
+          fileExtension: 'ics',
         );
       } else {
         // For iOS/macOS
         await FileSaver.instance.saveFile(
           name: 'room_inventory_events',
           bytes: await file.readAsBytes(),
-          ext: 'ics',
+          fileExtension: 'ics',
           mimeType: MimeType.other,
         );
       }
