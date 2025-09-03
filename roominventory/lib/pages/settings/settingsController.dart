@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:file_saver/file_saver.dart';
 import 'dart:io';
 
-import '../classes/event.dart';
+import '../../classes/event.dart';
 
 class SettingsController {
   final FirebaseAuth _auth = FirebaseAuth.instance;

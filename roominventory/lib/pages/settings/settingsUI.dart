@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:roominventory/classes/provider.dart';
-import 'package:roominventory/settings/settingsController.dart';
-import 'package:roominventory/settings/settingsWidgets.dart';
-import '/appbar/appbar.dart';
+import 'package:roominventory/pages/settings/settingsController.dart';
+import 'package:roominventory/pages/settings/settingsWidgets.dart';
+import '../../globalWidgets/appbar/appbar.dart';
 
 class SettingsPage extends StatefulWidget {
   @override

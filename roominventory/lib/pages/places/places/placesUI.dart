@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide SearchBar;
-import 'package:roominventory/appbar/appbar.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar.dart';
 
-import 'package:roominventory/places/addPlaces/addPlacesUI.dart';
-import 'package:roominventory/places/addZones/addZonesUI.dart';
-import 'package:roominventory/places/places/placesController.dart';
-import 'package:roominventory/places/places/placesWidgets.dart';
+import 'package:roominventory/pages/places/addPlaces/addPlacesUI.dart';
+import 'package:roominventory/pages/places/addZones/addZonesUI.dart';
+import 'package:roominventory/pages/places/places/placesController.dart';
+import 'package:roominventory/pages/places/places/placesWidgets.dart';
 
 class PlacesPage extends StatefulWidget {
   @override

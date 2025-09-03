@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/items/addItem/addItemController.dart';
+import 'package:roominventory/pages/items/addItem/addItemController.dart';
 
 class ItemInformationSection extends StatelessWidget {
   final AddItemController controller;

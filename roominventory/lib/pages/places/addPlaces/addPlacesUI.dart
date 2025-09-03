@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/places/addPlaces/addPlacesController.dart';
-import 'package:roominventory/places/addPlaces/addPlacesWidgets.dart';
+import 'package:roominventory/pages/places/addPlaces/addPlacesController.dart';
+import 'package:roominventory/pages/places/addPlaces/addPlacesWidgets.dart';
 
 class AddPlacePage extends StatefulWidget {
   @override

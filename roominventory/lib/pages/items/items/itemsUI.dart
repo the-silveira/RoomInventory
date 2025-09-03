@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/appbar/appbar.dart';
-import 'package:roominventory/items/addItem/addItemUI.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar.dart';
+import 'package:roominventory/pages/items/addItem/addItemUI.dart';
 
-import 'package:roominventory/items/items/itemsController.dart';
-import 'package:roominventory/items/items/itemsWidgets.dart';
+import 'package:roominventory/pages/items/items/itemsController.dart';
+import 'package:roominventory/pages/items/items/itemsWidgets.dart';
 
 class ItemsPage extends StatefulWidget {
   @override

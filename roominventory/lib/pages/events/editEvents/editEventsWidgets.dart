@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:roominventory/events/editEvents/editEvetsController.dart';
+import 'package:roominventory/pages/events/editEvents/editEvetsController.dart';
 
 class EventForm extends StatelessWidget {
   final editEventsController controller;

@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/appbar/appbar_back.dart';
-import 'package:roominventory/dimmers/dimmerController.dart';
-import 'package:roominventory/dimmers/dimmerWidgets.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar_back.dart';
+import 'package:roominventory/pages/dimmers/dimmerController.dart';
+import 'package:roominventory/pages/dimmers/dimmerWidgets.dart';
 
 class DMXConfigPage extends StatefulWidget {
   const DMXConfigPage({super.key});

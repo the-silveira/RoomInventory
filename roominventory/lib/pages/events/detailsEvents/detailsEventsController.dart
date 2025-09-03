@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-import 'package:roominventory/events/addItemEvents/addItemEventsUI.dart';
-import 'package:roominventory/events/editEvents/editEventsUI.dart';
+
 import 'dart:convert';
+
+import 'package:roominventory/pages/events/addItemEvents/addItemEventsUI.dart';
+import 'package:roominventory/pages/events/editEvents/editEventsUI.dart';
 
 class detailsEventsController {
   dynamic event;

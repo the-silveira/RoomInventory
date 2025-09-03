@@ -1,8 +1,8 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../classes/ConnectionState.dart';
-import '../classes/DMXChannel.dart';
+import '../../classes/connectionState.dart';
+import '../../classes/dmxChannel.dart';
 
 class DMXConfigController {
   // Configuration

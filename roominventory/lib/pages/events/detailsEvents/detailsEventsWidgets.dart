@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/events/detailsEvents/detailsEventsController.dart';
+import 'package:roominventory/pages/events/detailsEvents/detailsEventsController.dart';
 
 class EventHeader extends StatelessWidget {
   final dynamic event;

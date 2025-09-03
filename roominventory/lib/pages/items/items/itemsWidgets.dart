@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:roominventory/items/items/itemsController.dart';
+import 'package:roominventory/pages/items/items/itemsController.dart';
 
 class ItemSearchBar extends StatelessWidget {
   final TextEditingController controller;

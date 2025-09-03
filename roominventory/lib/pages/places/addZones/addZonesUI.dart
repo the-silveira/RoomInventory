@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/places/addZones/addZonesController.dart';
-import 'package:roominventory/places/addZones/addZonesWidgets.dart';
+import 'package:roominventory/pages/places/addZones/addZonesController.dart';
+import 'package:roominventory/pages/places/addZones/addZonesWidgets.dart';
 
 class AddZonePage extends StatefulWidget {
   @override

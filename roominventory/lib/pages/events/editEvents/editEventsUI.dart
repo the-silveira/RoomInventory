@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:roominventory/appbar/appbar.dart';
-import 'package:roominventory/events/editEvents/editEventsWidgets.dart';
-import 'package:roominventory/events/editEvents/editEvetsController.dart';
+import 'package:roominventory/globalWidgets/appbar/appbar.dart';
+import 'package:roominventory/pages/events/editEvents/editEventsWidgets.dart';
+import 'package:roominventory/pages/events/editEvents/editEvetsController.dart';
 
 class editEventsPage extends StatefulWidget {
   final dynamic event;

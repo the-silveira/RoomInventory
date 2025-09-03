@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:roominventory/events/addEvents.dart/addEventsController.dart';
+import 'package:roominventory/pages/events/addEvents.dart/addEventsController.dart';
 
 class EventFormField extends StatelessWidget {
   final TextEditingController controller;
