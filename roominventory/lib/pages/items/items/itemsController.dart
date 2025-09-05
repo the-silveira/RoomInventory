@@ -8,13 +8,54 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
+/// Controller class for managing inventory items operations and data.
+///
+/// This controller handles:
+/// - Fetching items data from the API with grouped details
+/// - Filtering and searching items
+/// - Deleting items from the database
+/// - Generating and sharing QR codes for items
+///
+/// The controller processes raw item data from the API and groups
+/// item details into a structured format for easier display and management.
+///
+/// Example usage:
+/// ```dart
+/// final controller = ItemsController();
+/// await controller.fetchData();
+/// ```
 class ItemsController {
+  /// List of all items fetched from the API with grouped details
   List<dynamic>? items;
+
+  /// List of items filtered by search queries
   List<dynamic> filteredItems = [];
+
+  /// Loading state indicator - true when data is being fetched
   bool isLoading = true;
+
+  /// Error message for displaying operation failures
   String errorMessage = '';
 
-  // Fetch items data
+  /// Fetches items data from the API and processes it into a grouped format.
+  ///
+  /// This method:
+  /// 1. Sends a POST request to the items API endpoint (query_param: 'I1')
+  /// 2. Processes the raw response to group item details by item ID
+  /// 3. Creates a structured format with item information and details list
+  /// 4. Handles HTTP errors and exceptions
+  /// 5. Updates loading state upon completion
+  ///
+  /// The grouped format includes:
+  /// - Item ID, name, zone, and place information
+  /// - List of detail maps with detail names and values
+  ///
+  /// Throws exceptions for network errors and invalid responses.
+  ///
+  /// Example:
+  /// ```dart
+  /// await controller.fetchData();
+  /// ```
   Future<void> fetchData() async {
     try {
       var response = await http.post(
@@ -60,17 +101,43 @@ class ItemsController {
     }
   }
 
-  // Filter items based on search query
+  /// Filters items based on a search query.
+  ///
+  /// This method filters the items list by matching the query against:
+  /// - Item ID (IdItem)
+  /// - Item name (ItemName)
+  ///
+  /// The search is case-insensitive and updates the filteredItems list.
+  ///
+  /// [query]: The search string to filter items by
+  /// [items]: The list of items to filter (typically the main items list)
+  ///
+  /// Example:
+  /// ```dart
+  /// controller.filterItems('laptop', itemsList);
+  /// ```
   void filterItems(String query, List<dynamic> items) {
-    if (items == null) return;
-
     filteredItems = items.where((item) {
       return item['IdItem'].toLowerCase().contains(query.toLowerCase()) ||
           item['ItemName'].toLowerCase().contains(query.toLowerCase());
     }).toList();
   }
 
-  // Delete item from database
+  /// Deletes an item from the database.
+  ///
+  /// Sends a request to the API to permanently delete the specified item.
+  /// Returns true if the deletion was successful, false otherwise.
+  ///
+  /// [idItem]: The unique identifier of the item to delete
+  /// Returns: [bool] indicating success (true) or failure (false)
+  ///
+  /// Example:
+  /// ```dart
+  /// bool success = await controller.deleteItem('item123');
+  /// if (success) {
+  ///   // Item deleted successfully
+  /// }
+  /// ```
   Future<bool> deleteItem(String idItem) async {
     try {
       var response = await http.post(
@@ -90,7 +157,31 @@ class ItemsController {
     }
   }
 
-  // Save QR code as image and share
+  /// Generates a QR code for an item and shares it via the device's share sheet.
+  ///
+  /// This method:
+  /// 1. Creates a custom QR code image with the item ID and branding
+  /// 2. Saves the image to a temporary file
+  /// 3. Opens the device's share sheet to allow saving or sharing the QR code
+  /// 4. Cleans up the temporary file after sharing
+  ///
+  /// The QR code includes:
+  /// - A white background with border
+  /// - The QR code itself (encoding the item ID)
+  /// - The item ID displayed below the QR code
+  ///
+  /// [itemId]: The unique identifier of the item to generate QR code for
+  /// [itemName]: The name of the item (used in share text)
+  /// Throws: Exception if QR code generation or sharing fails
+  ///
+  /// Example:
+  /// ```dart
+  /// try {
+  ///   await controller.saveAndShareQRCode('item123', 'Laptop');
+  /// } catch (e) {
+  ///   print('Error sharing QR code: $e');
+  /// }
+  /// ```
   Future<void> saveAndShareQRCode(String itemId, String itemName) async {
     try {
       // Create a picture recorder to draw the custom UI
@@ -166,6 +257,7 @@ class ItemsController {
       await tempFile.writeAsBytes(pngBytes);
 
       // Use share to let user choose where to save
+      // ignore: deprecated_member_use
       await Share.shareXFiles(
         [XFile(tempFile.path)],
         text: 'QR Code for Item $itemName',
