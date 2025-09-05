@@ -4,30 +4,69 @@ import 'dart:convert';
 import '../../classes/connectionState.dart';
 import '../../classes/dmxChannel.dart';
 
+/// Controller class for managing DMX configuration and connections.
+///
+/// This class handles loading DMX channels from an API, managing connection states,
+/// and saving configurations back to the server. It manages two distinct areas:
+/// - First area with lettered rows (A-E) and 12 columns
+/// - Second area with numbered rows (1-2) and 12 columns
 class DMXConfigController {
-  // Configuration
+  /// Configuration constants for the first area (FX channels)
   static const firstAreaRows = ['A', 'B', 'C', 'D', 'E'];
+
+  /// Number of columns in the first area
   static const firstAreaCols = 12;
+
+  /// Configuration constants for the second area (DMX channels)
   static const secondAreaRows = 2;
+
+  /// Number of columns in the second area
   static const secondAreaCols = 12;
+
+  /// Row labels for the second area
   static const secondAreaRowLabels = ['1', '2'];
 
-  // State
+  /// List of DMX channels loaded from the API
   List<DMXChannel> channels = [];
+
+  /// Map of active connections between first and second area channels
+  ///
+  /// Keys are in format 'first_[row]_[col]', values are in format 'second_[row]_[col]'
   final Map<String, String> connections = {};
+
+  /// Temporary storage for the starting point of a connection being created
   String? connectingFrom;
+
+  /// 2D list representing connection states for the first area
+  ///
+  /// Dimensions: [firstAreaRows.length] x [firstAreaCols]
   List<List<ConnectionState>> firstAreaStates = List.generate(
     firstAreaRows.length,
     (_) => List.filled(firstAreaCols, ConnectionState.disconnected),
   );
+
+  /// 2D list representing connection states for the second area
+  ///
+  /// Dimensions: [secondAreaRows] x [secondAreaCols]
   List<List<ConnectionState>> secondAreaStates = List.generate(
     secondAreaRows,
     (_) => List.filled(secondAreaCols, ConnectionState.disconnected),
   );
+
+  /// Loading state indicator
   bool isLoading = true;
+
+  /// Error message for any operation failures
   String errorMessage = '';
 
-  // Load channels from API
+  /// Loads DMX channels from the API endpoint.
+  ///
+  /// Makes a POST request to retrieve channel data and updates internal state
+  /// based on the response. Handles both successful and failed responses.
+  ///
+  /// Throws:
+  ///   - HttpException if the API request fails
+  ///   - FormatException if the response JSON is malformed
   Future<void> loadChannels() async {
     try {
       isLoading = true;
@@ -56,7 +95,14 @@ class DMXConfigController {
     }
   }
 
-  // Save configuration to API
+  /// Saves the current configuration to the API.
+  ///
+  /// Updates channel states from the UI, prepares the payload, and sends it
+  /// to the server. Returns true if the operation was successful.
+  ///
+  /// Returns:
+  ///   - `true` if the configuration was saved successfully
+  ///   - `false` if the operation failed
   Future<bool> saveConfiguration() async {
     try {
       // Update channel states from UI
@@ -138,6 +184,20 @@ class DMXConfigController {
     }
   }
 
+  /// Converts a UI key to the corresponding channel ID.
+  ///
+  /// Parses keys in the format 'first_[row]_[col]' or 'second_[row]_[col]'
+  /// and finds the matching channel ID from the loaded channels list.
+  ///
+  /// Parameters:
+  ///   - `key`: The UI key to convert (e.g., 'first_A_1', 'second_1_5')
+  ///
+  /// Returns:
+  ///   - The channel ID as an integer
+  ///
+  /// Throws:
+  ///   - FormatException if the key format is invalid
+  ///   - Exception if no matching channel is found
   int _getChannelIdFromKey(String key) {
     try {
       final parts = key.split('_');
@@ -162,6 +222,10 @@ class DMXConfigController {
     }
   }
 
+  /// Updates internal state from loaded channel data.
+  ///
+  /// Resets all states and repopulates them based on the current channel data,
+  /// including parsing existing connections from the server response.
   void _updateChannelStates() {
     // Reset all states
     firstAreaStates = List.generate(
@@ -223,6 +287,15 @@ class DMXConfigController {
     }
   }
 
+  /// Parses a string state into a ConnectionState enum value.
+  ///
+  /// Parameters:
+  ///   - `state`: The string representation of the state
+  ///
+  /// Returns:
+  ///   - ConnectionState.connected for 'connected'
+  ///   - ConnectionState.broken for 'broken'
+  ///   - ConnectionState.disconnected for any other value
   ConnectionState _parseState(String state) {
     switch (state.toLowerCase()) {
       case 'connected':
@@ -234,6 +307,13 @@ class DMXConfigController {
     }
   }
 
+  /// Handles tap events on the first area grid.
+  ///
+  /// Manages state toggling and connection initiation for FX channels.
+  ///
+  /// Parameters:
+  ///   - `row`: The row index (0-based) of the tapped cell
+  ///   - `col`: The column index (0-based) of the tapped cell
   void handleFirstAreaTap(int row, int col) {
     final key = 'first_${firstAreaRows[row]}_${col + 1}';
 
@@ -253,6 +333,14 @@ class DMXConfigController {
     }
   }
 
+  /// Handles tap events on the second area grid.
+  ///
+  /// Manages state toggling, connection completion, and connection removal
+  /// for DMX channels.
+  ///
+  /// Parameters:
+  ///   - `row`: The row index (0-based) of the tapped cell
+  ///   - `col`: The column index (0-based) of the tapped cell
   void handleSecondAreaTap(int row, int col) {
     final key = 'second_${row + 1}_${col + 1}';
 
@@ -285,6 +373,15 @@ class DMXConfigController {
     }
   }
 
+  /// Initiates a connection process from a specific cell.
+  ///
+  /// Stores the starting point for a connection that will be completed
+  /// when the user taps a target cell.
+  ///
+  /// Parameters:
+  ///   - `key`: The UI key of the starting cell
+  ///   - `row`: The row index of the starting cell
+  ///   - `col`: The column index of the starting cell
   void startConnectionProcess(String key, int row, int col) {
     if (firstAreaStates[row][col] == ConnectionState.broken) return;
     connectingFrom = key;

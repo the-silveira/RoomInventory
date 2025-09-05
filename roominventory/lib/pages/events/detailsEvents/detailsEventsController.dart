@@ -6,13 +6,51 @@ import 'dart:convert';
 import 'package:roominventory/pages/events/addItemEvents/addItemEventsUI.dart';
 import 'package:roominventory/pages/events/editEvents/editEventsUI.dart';
 
+/// Controller class for managing event details and associated items.
+///
+/// This controller handles fetching event information, managing related items,
+/// performing deletion operations, and navigation to related pages.
+/// It serves as the business logic layer for event detail views.
+///
+/// Example usage:
+/// ```dart
+/// final controller = detailsEventsController();
+/// await controller.fetchData('event123');
+/// ```
 class detailsEventsController {
+  /// The event data being displayed and managed
   dynamic event;
+
+  /// List of items associated with the current event
   List<dynamic> items = [];
+
+  /// Loading state indicator - true when data is being fetched
   bool isLoading = true;
+
+  /// Error message for displaying operation failures
   String errorMessage = '';
 
-  // Fetch event and item details
+  /// Fetches event details and associated items from the API.
+  ///
+  /// This method performs two main operations:
+  /// 1. Fetches the specific event details by ID
+  /// 2. Fetches all items associated with that event
+  /// 3. Processes and groups item details into a structured format
+  ///
+  /// The method handles various API response scenarios including:
+  /// - Successful data retrieval
+  /// - Event not found errors
+  /// - API error responses
+  /// - Network failures
+  ///
+  /// Throws exceptions for network errors and invalid responses.
+  ///
+  /// [eventId]: The unique identifier of the event to fetch
+  ///
+  /// Example:
+  /// ```dart
+  /// await controller.fetchData('event123');
+  /// ```
   Future<void> fetchData(String eventId) async {
     try {
       items.clear();
@@ -92,7 +130,21 @@ class detailsEventsController {
     }
   }
 
-  // Delete event
+  /// Deletes an event from the system.
+  ///
+  /// Sends a request to the API to permanently delete the specified event.
+  /// Returns true if the deletion was successful, false otherwise.
+  ///
+  /// [eventId]: The unique identifier of the event to delete
+  /// Returns: [bool] indicating success (true) or failure (false)
+  ///
+  /// Example:
+  /// ```dart
+  /// bool success = await controller.deleteEvent('event123');
+  /// if (success) {
+  ///   // Event deleted successfully
+  /// }
+  /// ```
   Future<bool> deleteEvent(String eventId) async {
     try {
       var response = await http.post(
@@ -115,7 +167,19 @@ class detailsEventsController {
     }
   }
 
-  // Delete item from event
+  /// Removes an item from the current event.
+  ///
+  /// This operation disassociates an item from the event but does not
+  /// delete the item itself from the system.
+  ///
+  /// [itemId]: The unique identifier of the item to remove
+  /// [eventId]: The unique identifier of the event from which to remove the item
+  /// Returns: [bool] indicating success (true) or failure (false)
+  ///
+  /// Example:
+  /// ```dart
+  /// bool success = await controller.deleteItem('item456', 'event123');
+  /// ```
   Future<bool> deleteItem(String itemId, String eventId) async {
     try {
       var response = await http.post(
@@ -135,7 +199,17 @@ class detailsEventsController {
     }
   }
 
-  // Navigate to add items page
+  /// Navigates to the add items page for the current event.
+  ///
+  /// Opens a new screen where users can search for and add items to the event.
+  ///
+  /// [context]: The BuildContext for navigation
+  /// [eventId]: The unique identifier of the event to add items to
+  ///
+  /// Example:
+  /// ```dart
+  /// controller.navigateToAddItems(context, 'event123');
+  /// ```
   void navigateToAddItems(BuildContext context, String eventId) {
     Navigator.push(
       context,
@@ -145,7 +219,17 @@ class detailsEventsController {
     );
   }
 
-  // Navigate to edit event page
+  /// Navigates to the edit event page.
+  ///
+  /// Opens a new screen where users can modify the event details.
+  ///
+  /// [context]: The BuildContext for navigation
+  /// [event]: The event data to edit
+  ///
+  /// Example:
+  /// ```dart
+  /// controller.navigateToEditEvents(context, eventData);
+  /// ```
   void navigateToEditEvents(BuildContext context, dynamic event) {
     if (event == null) return;
 
