@@ -33,8 +33,8 @@ import 'package:http/http.dart' as http;
 ///
 /// ## API Integration:
 /// The widget fetches events from the API endpoint:
-/// - URL: `https://services.interagit.com/API/roominventory/api_ri.php`
-/// - Method: POST with `{'query_param': 'E1'}`
+/// - URL: `https://services.interagit.com/API/roominventory/events`
+/// - Method: GET
 /// - Response: JSON array of event objects
 ///
 /// ## Event Structure:
@@ -86,7 +86,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   /// Fetches events from the API and updates the events map.
   ///
   /// ## API Call:
-  /// - Makes a POST request to the events endpoint
+  /// - Makes a GET request to the events endpoint
   /// - Parses JSON response into Event objects
   /// - Maps events by their normalized date
   ///
@@ -98,36 +98,53 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   /// Triggers a rebuild with the new events data
   Future<void> _loadEvents() async {
     try {
-      var response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E1'},
+      var response = await http.get(
+        Uri.parse('https://services.interagit.com/API/roominventory/events'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final dynamic eventsJson = json.decode(response.body);
 
+        // Clear existing events
+        _events.clear();
+
+        // Build map with dates as keys and lists of events as values
+        for (var eventJson in eventsJson) {
+          final date = _normalizeDate(DateTime.parse(eventJson['Date']));
+          final event = Event(
+            eventJson['IdEvent'],
+            eventJson['EventName'],
+            eventJson['EventPlace'],
+            eventJson['NameRep'],
+            eventJson['EmailRep'],
+            eventJson['TecExt'] ?? '',
+            eventJson['Date'],
+          );
+
+          if (!_events.containsKey(date)) {
+            _events[date] = [];
+          }
+          _events[date]!.add(event);
+        }
+
+        // Update selected events if needed
+        if (_selectedDay != null) {
+          _selectedEvents = _events[_normalizeDate(_selectedDay!)] ?? [];
+        }
+
+        setState(() {}); // Trigger rebuild
+      } else if (response.statusCode == 404) {
+        print('No events found');
         setState(() {
-          _events = {
-            for (var event in eventsJson)
-              _normalizeDate(DateTime.parse(event['Date'])): [
-                Event(
-                  event['IdEvent'],
-                  event['EventName'],
-                  event['EventPlace'],
-                  event['NameRep'],
-                  event['EmailRep'],
-                  event['TecExt'],
-                  event['Date'],
-                )
-              ]
-          };
+          _events = {};
+          _selectedEvents = [];
         });
       } else {
         print('Failed to fetch data: ${response.statusCode}');
       }
     } catch (e) {
-      print('Exception: $e');
+      print('Exception loading events: $e');
     }
   }
 
@@ -141,7 +158,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           // Calendar Table
           TableCalendar(
             firstDay: DateTime.utc(2023, 1, 1),
-            lastDay: DateTime.utc(2025, 12, 31),
+            lastDay: DateTime.utc(2125, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: _calendarFormat,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),

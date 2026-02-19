@@ -38,7 +38,7 @@ class menuEventosController {
   /// Fetches events data from the API and initializes both events lists.
   ///
   /// This method:
-  /// 1. Sends a POST request to the events API endpoint
+  /// 1. Sends a GET request to the events API endpoint
   /// 2. Parses the JSON response into events list
   /// 3. Initializes filteredEvents with all events
   /// 4. Handles HTTP errors and exceptions
@@ -52,10 +52,9 @@ class menuEventosController {
   /// ```
   Future<void> fetchData() async {
     try {
-      var response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E1'},
+      var response = await http.get(
+        Uri.parse('https://services.interagit.com/API/roominventory/events'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {

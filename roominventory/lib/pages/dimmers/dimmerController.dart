@@ -61,7 +61,7 @@ class DMXConfigController {
 
   /// Loads DMX channels from the API endpoint.
   ///
-  /// Makes a POST request to retrieve channel data and updates internal state
+  /// Makes a GET request to retrieve channel data and updates internal state
   /// based on the response. Handles both successful and failed responses.
   ///
   /// Throws:
@@ -72,10 +72,10 @@ class DMXConfigController {
       isLoading = true;
       errorMessage = '';
 
-      final response = await http.post(
+      final response = await http.get(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'C1'},
+            'https://services.interagit.com/API/roominventory/channels/with-connections'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -85,11 +85,15 @@ class DMXConfigController {
         channels =
             channelsJson.map((json) => DMXChannel.fromJson(json)).toList();
         _updateChannelStates();
+      } else if (response.statusCode == 404) {
+        channels = [];
+        errorMessage = 'No channels found';
       } else {
         errorMessage = 'Failed to load channels: ${response.statusCode}';
       }
     } catch (e) {
-      errorMessage = 'Error loading channels: $e';
+      errorMessage = 'Connection error: $e';
+      channels = [];
     } finally {
       isLoading = false;
     }
@@ -141,41 +145,41 @@ class DMXConfigController {
       }
 
       final payload = {
-        'query_param': 'C2',
-        'data': {
-          'states': {
-            for (final channel in channels) channel.id.toString(): channel.state
-          },
-          'connections': [
-            for (final entry in connections.entries)
-              if ((entry.key.startsWith('first_') &&
-                  entry.value.startsWith('second_')))
-                {
-                  'source': _getChannelIdFromKey(entry.key),
-                  'target': _getChannelIdFromKey(entry.value),
-                }
-          ],
+        'states': {
+          for (final channel in channels) channel.id.toString(): channel.state
         },
+        'connections': [
+          for (final entry in connections.entries)
+            if ((entry.key.startsWith('first_') &&
+                entry.value.startsWith('second_')))
+              {
+                'source': _getChannelIdFromKey(entry.key),
+                'target': _getChannelIdFromKey(entry.value),
+              }
+        ],
       };
 
       // Send to API
       final response = await http.post(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
+            'https://services.interagit.com/API/roominventory/channels/save'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(payload),
       );
 
       // Handle response
       if (response.statusCode == 200) {
-        if (response.body.trim().isEmpty) {
-          errorMessage = 'Server returned empty response.';
-          return false;
-        }
         final result = json.decode(response.body);
         return result['success'] == true;
       } else {
-        errorMessage = 'Server error: ${response.statusCode}';
+        // Try to parse error message
+        try {
+          final result = json.decode(response.body);
+          errorMessage =
+              result['error'] ?? 'Server error: ${response.statusCode}';
+        } catch (_) {
+          errorMessage = 'Server error: ${response.statusCode}';
+        }
         return false;
       }
     } catch (e) {

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 /// A controller class for managing the addition of new zones to the inventory system.
 ///
@@ -38,6 +39,9 @@ class AddZoneController {
   /// Must be disposed when no longer needed to prevent memory leaks.
   final TextEditingController nameController = TextEditingController();
 
+  /// Currently selected place ID for zone creation
+  String? selectedPlaceId;
+
   /// Indicates whether an API request is currently in progress.
   ///
   /// When `true`:
@@ -57,6 +61,7 @@ class AddZoneController {
   ///
   /// Example error messages:
   /// - "Please enter a zone name" (validation error)
+  /// - "Please select a place" (validation error)
   /// - "Failed to save zone: 404" (API error)
   /// - "Error saving zone: SocketException" (network error)
   String errorMessage = '';
@@ -65,11 +70,12 @@ class AddZoneController {
   ///
   /// Performs client-side validation checks:
   /// - Ensures zone name field is not empty
+  /// - Ensures a place is selected
   /// - Updates [errorMessage] with appropriate validation messages
   ///
   /// Returns:
-  /// - `true` if the form is valid (zone name is not empty)
-  /// - `false` if the form is invalid (zone name is empty)
+  /// - `true` if the form is valid (zone name is not empty and place is selected)
+  /// - `false` if the form is invalid
   ///
   /// Example:
   /// ```dart
@@ -82,6 +88,10 @@ class AddZoneController {
   bool validateForm() {
     if (nameController.text.isEmpty) {
       errorMessage = 'Please enter a zone name';
+      return false;
+    }
+    if (selectedPlaceId == null) {
+      errorMessage = 'Please select a place';
       return false;
     }
     errorMessage = '';
@@ -97,12 +107,12 @@ class AddZoneController {
   /// 4. Handles response and error scenarios
   /// 5. Resets loading state to `false`
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// Query Parameter: `query_param = 'P4'` (specific to zone creation)
-  /// Form Data: `ZoneName = [entered zone name]`
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/zones`
+  /// HTTP Method: POST with JSON body
+  /// JSON Body: `{"ZoneName": "[name]", "FK_IdPlace": "[placeId]"}`
   ///
   /// Returns:
-  /// - `Future<bool>`: `true` if the zone was saved successfully (HTTP 200)
+  /// - `Future<bool>`: `true` if the zone was saved successfully (HTTP 201)
   /// - `Future<bool>`: `false` if validation failed or API call encountered an error
   ///
   /// Error Handling:
@@ -122,25 +132,44 @@ class AddZoneController {
     if (!validateForm()) return false;
 
     isLoading = true;
+    errorMessage = '';
 
     try {
+      // Prepare JSON data
+      Map<String, dynamic> zoneData = {
+        'ZoneName': nameController.text,
+        'FK_IdPlace': selectedPlaceId,
+      };
+
       final response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {
-          'query_param': 'P4', // Adjust based on your API
-          'ZoneName': nameController.text,
-        },
+        Uri.parse('https://services.interagit.com/API/roominventory/zones'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(zoneData),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return true;
+      } else if (response.statusCode == 409) {
+        // Conflict - zone might already exist
+        try {
+          final errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Zone already exists';
+        } catch (_) {
+          errorMessage = 'Zone already exists';
+        }
+        return false;
       } else {
-        errorMessage = 'Failed to save zone: ${response.statusCode}';
+        // Try to parse error message
+        try {
+          final errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Failed to save zone';
+        } catch (_) {
+          errorMessage = 'Failed to save zone (${response.statusCode})';
+        }
         return false;
       }
     } catch (e) {
-      errorMessage = 'Error saving zone: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     } finally {
       isLoading = false;

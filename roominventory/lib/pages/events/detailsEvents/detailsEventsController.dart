@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-
 import 'dart:convert';
-
 import 'package:roominventory/pages/events/addItemEvents/addItemEventsUI.dart';
 import 'package:roominventory/pages/events/editEvents/editEventsUI.dart';
 
@@ -15,7 +13,7 @@ import 'package:roominventory/pages/events/editEvents/editEventsUI.dart';
 /// Example usage:
 /// ```dart
 /// final controller = detailsEventsController();
-/// await controller.fetchData('event123');
+/// await controller.fetchData('VCCS_1');
 /// ```
 class detailsEventsController {
   /// The event data being displayed and managed
@@ -33,8 +31,8 @@ class detailsEventsController {
   /// Fetches event details and associated items from the API.
   ///
   /// This method performs two main operations:
-  /// 1. Fetches the specific event details by ID
-  /// 2. Fetches all items associated with that event
+  /// 1. Fetches the specific event details by ID using GET /events/{eventId}
+  /// 2. Fetches all items associated with that event using GET /events/{eventId}/items
   /// 3. Processes and groups item details into a structured format
   ///
   /// The method handles various API response scenarios including:
@@ -49,51 +47,44 @@ class detailsEventsController {
   ///
   /// Example:
   /// ```dart
-  /// await controller.fetchData('event123');
+  /// await controller.fetchData('VCCS_1');
   /// ```
   Future<void> fetchData(String eventId) async {
     try {
+      isLoading = true;
       items.clear();
+      errorMessage = '';
 
-      // Fetch event details
-      var eventResponse = await http.post(
+      // Fetch single event details using GET
+      var eventResponse = await http.get(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E1'},
+            'https://services.interagit.com/API/roominventory/events/$eventId'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (eventResponse.statusCode == 200) {
-        List<dynamic> allEvents = json.decode(eventResponse.body);
-        event = allEvents.firstWhere(
-          (e) => e['IdEvent'] == eventId,
-          orElse: () => null,
-        );
-
-        if (event == null) {
-          errorMessage = 'Event not found';
-        }
+        event = json.decode(eventResponse.body);
+      } else if (eventResponse.statusCode == 404) {
+        errorMessage = 'Event not found';
+        event = null;
       } else {
-        errorMessage = 'Failed to load event details';
+        errorMessage =
+            'Failed to load event details (${eventResponse.statusCode})';
+        event = null;
       }
 
-      // Fetch item details for this event
-      var itemsResponse = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E2', 'IdEvent': eventId},
-      );
+      // If event exists, fetch its items
+      if (event != null) {
+        var itemsResponse = await http.get(
+          Uri.parse(
+              'https://services.interagit.com/API/roominventory/events/$eventId/items'),
+          headers: {'Content-Type': 'application/json'},
+        );
 
-      if (itemsResponse.statusCode == 200) {
-        dynamic responseBody = json.decode(itemsResponse.body);
-
-        if (responseBody is Map &&
-            responseBody.containsKey('status') &&
-            responseBody['status'] == 'error') {
-          // Handle API error response
-        } else {
+        if (itemsResponse.statusCode == 200) {
           List<dynamic> rawItems = json.decode(itemsResponse.body);
 
-          // Group the details by IdItem
+          // Group the details by IdItem (same logic as before)
           Map<String, Map<String, dynamic>> groupedItems = {};
 
           for (var row in rawItems) {
@@ -119,12 +110,18 @@ class detailsEventsController {
           }
 
           items = groupedItems.values.toList();
+        } else if (itemsResponse.statusCode == 404) {
+          // No items found for this event
+          items = [];
+        } else {
+          errorMessage =
+              'Failed to load item details (${itemsResponse.statusCode})';
         }
-      } else {
-        errorMessage = 'Failed to load item details';
       }
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
+      event = null;
+      items = [];
     } finally {
       isLoading = false;
     }
@@ -132,7 +129,7 @@ class detailsEventsController {
 
   /// Deletes an event from the system.
   ///
-  /// Sends a request to the API to permanently delete the specified event.
+  /// Sends a DELETE request to the API to permanently delete the specified event.
   /// Returns true if the deletion was successful, false otherwise.
   ///
   /// [eventId]: The unique identifier of the event to delete
@@ -140,29 +137,33 @@ class detailsEventsController {
   ///
   /// Example:
   /// ```dart
-  /// bool success = await controller.deleteEvent('event123');
+  /// bool success = await controller.deleteEvent('VCCS_1');
   /// if (success) {
   ///   // Event deleted successfully
   /// }
   /// ```
   Future<bool> deleteEvent(String eventId) async {
     try {
-      var response = await http.post(
+      var response = await http.delete(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {
-          'query_param': 'E5',
-          'IdEvent': eventId,
-        },
+            'https://services.interagit.com/API/roominventory/events/$eventId'),
+        headers: {'Content-Type': 'application/json'},
       );
 
-      if (response.statusCode == 200) {
-        var responseBody = json.decode(response.body);
-        return responseBody['status'] == 'success';
+      if (response.statusCode == 204) {
+        return true;
+      } else {
+        // Try to parse error message
+        try {
+          var errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Failed to delete event';
+        } catch (_) {
+          errorMessage = 'Failed to delete event (${response.statusCode})';
+        }
+        return false;
       }
-      return false;
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     }
   }
@@ -178,23 +179,30 @@ class detailsEventsController {
   ///
   /// Example:
   /// ```dart
-  /// bool success = await controller.deleteItem('item456', 'event123');
+  /// bool success = await controller.deleteItem('XLR3_01', 'VCCS_1');
   /// ```
   Future<bool> deleteItem(String itemId, String eventId) async {
     try {
-      var response = await http.post(
+      var response = await http.delete(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E6', 'IdItem': itemId, 'IdEvent': eventId},
+            'https://services.interagit.com/API/roominventory/events/$eventId/items/$itemId'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
-        var responseBody = json.decode(response.body);
-        return responseBody['status'] == 'success';
+        return true;
+      } else {
+        // Try to parse error message
+        try {
+          var errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Failed to remove item';
+        } catch (_) {
+          errorMessage = 'Failed to remove item (${response.statusCode})';
+        }
+        return false;
       }
-      return false;
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     }
   }
@@ -208,7 +216,7 @@ class detailsEventsController {
   ///
   /// Example:
   /// ```dart
-  /// controller.navigateToAddItems(context, 'event123');
+  /// controller.navigateToAddItems(context, 'VCCS_1');
   /// ```
   void navigateToAddItems(BuildContext context, String eventId) {
     Navigator.push(
@@ -216,7 +224,10 @@ class detailsEventsController {
       CupertinoPageRoute(
         builder: (context) => addItemEventsPage(eventId: eventId),
       ),
-    );
+    ).then((_) {
+      // Refresh data when returning
+      fetchData(eventId);
+    });
   }
 
   /// Navigates to the edit event page.
@@ -238,6 +249,9 @@ class detailsEventsController {
       CupertinoPageRoute(
         builder: (context) => editEventsPage(event: event),
       ),
-    );
+    ).then((_) {
+      // Refresh data when returning
+      fetchData(event['IdEvent']);
+    });
   }
 }

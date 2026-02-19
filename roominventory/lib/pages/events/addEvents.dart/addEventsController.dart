@@ -146,8 +146,8 @@ class AddEventController {
   /// 4. Handles response parsing and error management
   /// 5. Resets loading state upon completion
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// API Parameter: `query_param = 'E3'` (Event creation endpoint)
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/events`
+  /// HTTP Method: POST with JSON body
   ///
   /// Returns:
   ///   - `true` if the event was successfully created and persisted
@@ -171,32 +171,39 @@ class AddEventController {
     errorMessage = null;
 
     try {
+      // Prepare JSON data
+      Map<String, dynamic> eventData = {
+        'IdEvent': eventIdController.text,
+        'EventName': eventNameController.text,
+        'EventPlace': eventPlaceController.text,
+        'NameRep': nameRepController.text,
+        'EmailRep': emailRepController.text,
+        'TecExt': tecExtController.text,
+        'Date': dateController.text,
+      };
+
       // Make API request
       var response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {
-          'query_param': 'E3',
-          'IdEvent': eventIdController.text,
-          'EventName': eventNameController.text,
-          'EventPlace': eventPlaceController.text,
-          'NameRep': nameRepController.text,
-          'EmailRep': emailRepController.text,
-          'TecExt': tecExtController.text,
-          'Date': dateController.text,
-        },
+        Uri.parse('https://services.interagit.com/API/roominventory/events'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(eventData),
       );
 
       // Handle response
-      if (response.statusCode == 200) {
-        var responseData = json.decode(response.body);
-        return responseData['status'] == 'success';
+      if (response.statusCode == 201) {
+        return true;
       } else {
-        errorMessage = 'Failed to connect to the server';
+        // Try to parse error message from response
+        try {
+          var errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Failed to create event';
+        } catch (_) {
+          errorMessage = 'Failed to create event (${response.statusCode})';
+        }
         return false;
       }
     } catch (e) {
-      errorMessage = 'An error occurred: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     } finally {
       isLoading = false;

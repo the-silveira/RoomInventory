@@ -18,13 +18,13 @@ import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 /// - Error handling and message propagation
 ///
 /// API Endpoints:
-/// - I4: Fetch items available for event association
-/// - E4: Associate selected items with an event
+/// - GET /items/available-for-event/{eventId}: Fetch items available for event association
+/// - POST /events/{eventId}/items: Associate selected items with an event
 ///
 /// Example usage:
 /// ```dart
 /// final controller = addItemEventsController();
-/// await controller.fetchAllItems('event123');
+/// await controller.fetchAllItems('VCCS_1');
 /// ```
 class addItemEventsController {
   /// Complete list of all items available for association
@@ -71,11 +71,10 @@ class addItemEventsController {
 
   /// Fetches all available items that can be associated with an event.
   ///
-  /// Makes a POST request to the API endpoint to retrieve items available
+  /// Makes a GET request to the API endpoint to retrieve items available
   /// for association with the specified event.
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// API Parameter: `query_param = 'I4'` (Fetch items for event)
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/items/available-for-event/{eventId}`
   ///
   /// Parameters:
   ///   - `eventId`: The unique identifier of the event to fetch items for
@@ -94,20 +93,26 @@ class addItemEventsController {
       isLoading = true;
       errorMessage = '';
 
-      var response = await http.post(
+      var response = await http.get(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'I4', 'IdEvent': eventId},
+            'https://services.interagit.com/API/roominventory/items/available-for-event/$eventId'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         allItems = json.decode(response.body);
         filteredItems = allItems;
+      } else if (response.statusCode == 404) {
+        allItems = [];
+        filteredItems = [];
+        errorMessage = 'No items available';
       } else {
-        errorMessage = 'Failed to load items';
+        errorMessage = 'Failed to load items (${response.statusCode})';
       }
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
+      allItems = [];
+      filteredItems = [];
     } finally {
       isLoading = false;
     }
@@ -174,8 +179,8 @@ class addItemEventsController {
   /// [selectedItems] with the given event. Validates that at least one
   /// item is selected before making the API call.
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// API Parameter: `query_param = 'E4'` (Associate items with event)
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/events/{eventId}/items`
+  /// HTTP Method: POST with JSON body
   ///
   /// Parameters:
   ///   - `eventId`: The unique identifier of the event to associate items with
@@ -199,26 +204,36 @@ class addItemEventsController {
     errorMessage = '';
 
     try {
+      // Prepare items list in the format expected by the API
+      List<Map<String, String>> itemsList = selectedItems
+          .map((item) => {'IdItem': item['IdItem'].toString()})
+          .toList();
+
+      Map<String, dynamic> requestBody = {
+        'items': itemsList,
+      };
+
       var response = await http.post(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {
-          'query_param': 'E4',
-          'IdEvent': eventId,
-          'Items':
-              json.encode(selectedItems.map((item) => item['IdItem']).toList()),
-        },
+            'https://services.interagit.com/API/roominventory/events/$eventId/items'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestBody),
       );
 
       if (response.statusCode == 200) {
-        var responseData = json.decode(response.body);
-        return responseData['status'] == 'success';
+        return true;
       } else {
-        errorMessage = 'Failed to connect to the server';
+        // Try to parse error message from response
+        try {
+          var errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Failed to add items';
+        } catch (_) {
+          errorMessage = 'Failed to add items (${response.statusCode})';
+        }
         return false;
       }
     } catch (e) {
-      errorMessage = 'An error occurred: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     } finally {
       isLoading = false;
