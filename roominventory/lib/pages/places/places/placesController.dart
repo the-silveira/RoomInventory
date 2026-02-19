@@ -73,26 +73,26 @@ class PlacesController {
   /// Fetches and processes places data from the remote API.
   ///
   /// Performs the following operations:
-  /// 1. Sends POST request to the API endpoint with query parameter 'P2'
+  /// 1. Sends GET request to the API endpoint `/items/with-details`
   /// 2. Processes the flat API response into hierarchical structure
   /// 3. Handles HTTP errors and exceptions
   /// 4. Updates loading state and error messages
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// Query Parameter: `query_param = 'P2'`
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/items/with-details`
+  /// HTTP Method: GET
   ///
   /// Expected API Response Structure (flat):
   /// ```json
   /// [
   ///   {
-  ///     "IdPlace": "1",
-  ///     "PlaceName": "Office",
-  ///     "IdZone": "1",
-  ///     "ZoneName": "Reception",
-  ///     "IdItem": "1",
-  ///     "ItemName": "Computer",
-  ///     "DetailsName": "Serial Number",
-  ///     "Details": "SN12345"
+  ///     "IdPlace": "P001",
+  ///     "PlaceName": "Regie",
+  ///     "IdZone": "Z005",
+  ///     "ZoneName": "Armário",
+  ///     "IdItem": "MSCH_14A",
+  ///     "ItemName": "Shure 14A",
+  ///     "DetailsName": "Condição",
+  ///     "Details": "Avariado"
   ///   }
   /// ]
   /// ```
@@ -117,63 +117,87 @@ class PlacesController {
   /// ```
   Future<void> fetchData() async {
     try {
-      var response = await http.post(
+      isLoading = true;
+      errorMessage = '';
+
+      var response = await http.get(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'P2'},
+            'https://services.interagit.com/API/roominventory/items/with-details'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         List<dynamic> rawData = json.decode(response.body);
-        Map<String, dynamic> groupedData = {};
 
-        for (var row in rawData) {
-          String idPlace = row['IdPlace'];
-          String placeName = row['PlaceName'];
-          String idZone = row['IdZone'];
-          String zoneName = row['ZoneName'];
-          String idItem = row['IdItem'];
-          String itemName = row['ItemName'];
-          String detailsName = row['DetailsName'];
-          String detailsValue = row['Details'];
+        // If the API returns grouped data directly, check structure
+        if (rawData.isNotEmpty &&
+            rawData.first.containsKey('Zones') &&
+            rawData.first.containsKey('PlaceName')) {
+          // Data is already grouped
+          places = rawData;
+        } else {
+          // Group the data using your existing logic
+          Map<String, dynamic> groupedData = {};
 
-          if (!groupedData.containsKey(idPlace)) {
-            groupedData[idPlace] = {
-              'PlaceName': placeName,
-              'Zones': {},
-            };
+          for (var row in rawData) {
+            String idPlace = row['IdPlace'] ?? '';
+            String placeName = row['PlaceName'] ?? '';
+            String idZone = row['IdZone'] ?? '';
+            String zoneName = row['ZoneName'] ?? '';
+            String idItem = row['IdItem'] ?? '';
+            String itemName = row['ItemName'] ?? '';
+            String detailsName = row['DetailsName'] ?? '';
+            String detailsValue = row['Details'] ?? '';
+
+            if (idPlace.isEmpty) continue;
+
+            if (!groupedData.containsKey(idPlace)) {
+              groupedData[idPlace] = {
+                'PlaceName': placeName,
+                'Zones': {},
+              };
+            }
+
+            if (!groupedData[idPlace]['Zones'].containsKey(idZone)) {
+              groupedData[idPlace]['Zones'][idZone] = {
+                'ZoneName': zoneName,
+                'Items': {},
+              };
+            }
+
+            if (!groupedData[idPlace]['Zones'][idZone]['Items']
+                .containsKey(idItem)) {
+              groupedData[idPlace]['Zones'][idZone]['Items'][idItem] = {
+                'IdItem': idItem,
+                'ItemName': itemName,
+                'Details': [],
+              };
+            }
+
+            if (detailsName.isNotEmpty) {
+              groupedData[idPlace]['Zones'][idZone]['Items'][idItem]['Details']
+                  .add({
+                'DetailsName': detailsName,
+                'Details': detailsValue,
+              });
+            }
           }
 
-          if (!groupedData[idPlace]['Zones'].containsKey(idZone)) {
-            groupedData[idPlace]['Zones'][idZone] = {
-              'ZoneName': zoneName,
-              'Items': {},
-            };
-          }
-
-          if (!groupedData[idPlace]['Zones'][idZone]['Items']
-              .containsKey(idItem)) {
-            groupedData[idPlace]['Zones'][idZone]['Items'][idItem] = {
-              'IdItem': idItem,
-              'ItemName': itemName,
-              'Details': [],
-            };
-          }
-
-          groupedData[idPlace]['Zones'][idZone]['Items'][idItem]['Details']
-              .add({
-            'DetailsName': detailsName,
-            'Details': detailsValue,
-          });
+          places = groupedData.values.toList();
         }
 
-        places = groupedData.values.toList();
-        filteredPlaces = places;
+        filteredPlaces = places ?? [];
+      } else if (response.statusCode == 404) {
+        places = [];
+        filteredPlaces = [];
+        errorMessage = 'No data found';
       } else {
         errorMessage = 'Failed to fetch data: ${response.statusCode}';
       }
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
+      places = [];
+      filteredPlaces = [];
     } finally {
       isLoading = false;
     }
@@ -200,16 +224,21 @@ class PlacesController {
   ///
   /// Example:
   /// ```dart
-  /// // Filter for items containing "computer"
-  /// controller.filterPlaces('computer');
+  /// // Filter for items containing "Shure"
+  /// controller.filterPlaces('Shure');
   ///
-  /// // Filter for places containing "office"
-  /// controller.filterPlaces('office');
+  /// // Filter for places containing "Regie"
+  /// controller.filterPlaces('Regie');
   ///
   /// // Reset to show all data
   /// controller.filterPlaces('');
   /// ```
   void filterPlaces(String query) {
+    if (places == null || places!.isEmpty) {
+      filteredPlaces = [];
+      return;
+    }
+
     if (query.isEmpty) {
       filteredPlaces = places;
       return;
@@ -228,16 +257,16 @@ class PlacesController {
                   var item = itemEntry.value;
 
                   // Check if the search query matches ItemName or IdItem
-                  return item['ItemName']
+                  return (item['ItemName'] ?? '')
                           .toLowerCase()
                           .contains(query.toLowerCase()) ||
-                      item['IdItem']
+                      (item['IdItem'] ?? '')
                           .toLowerCase()
                           .contains(query.toLowerCase());
                 }).toList();
 
                 // Check if the search query matches ZoneName
-                if (zone['ZoneName']
+                if ((zone['ZoneName'] ?? '')
                     .toLowerCase()
                     .contains(query.toLowerCase())) {
                   // Include all items in the zone if the zone matches
@@ -264,7 +293,9 @@ class PlacesController {
               Map.fromEntries(filteredZones.cast<MapEntry<dynamic, dynamic>>());
 
           // Check if the search query matches PlaceName
-          if (place['PlaceName'].toLowerCase().contains(query.toLowerCase())) {
+          if ((place['PlaceName'] ?? '')
+              .toLowerCase()
+              .contains(query.toLowerCase())) {
             // Include all zones in the place if the place matches
             filteredZonesMap = place['Zones'];
           }

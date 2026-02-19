@@ -40,7 +40,7 @@ class ItemsController {
   /// Fetches items data from the API and processes it into a grouped format.
   ///
   /// This method:
-  /// 1. Sends a POST request to the items API endpoint (query_param: 'I1')
+  /// 1. Sends a GET request to the items endpoint `/items`
   /// 2. Processes the raw response to group item details by item ID
   /// 3. Creates a structured format with item information and details list
   /// 4. Handles HTTP errors and exceptions
@@ -58,44 +58,62 @@ class ItemsController {
   /// ```
   Future<void> fetchData() async {
     try {
-      var response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'I1'},
+      isLoading = true;
+      errorMessage = '';
+
+      var response = await http.get(
+        Uri.parse('https://services.interagit.com/API/roominventory/items'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         List<dynamic> rawItems = json.decode(response.body);
-        Map<String, Map<String, dynamic>> groupedItems = {};
 
-        for (var row in rawItems) {
-          String idItem = row['IdItem'];
-          String detailsName = row['DetailsName'];
-          String detailValue = row['Details'];
+        // If the API returns grouped data directly, use it
+        if (rawItems.isNotEmpty && rawItems.first.containsKey('DetailsList')) {
+          items = rawItems;
+        } else {
+          // Otherwise, group the items (keep your existing grouping logic)
+          Map<String, Map<String, dynamic>> groupedItems = {};
 
-          if (!groupedItems.containsKey(idItem)) {
-            groupedItems[idItem] = {
-              'IdItem': idItem,
-              'ItemName': row['ItemName'],
-              'ZoneName': row['ZoneName'],
-              'PlaceName': row['PlaceName'],
-              'DetailsList': <Map<String, String>>[],
-            };
+          for (var row in rawItems) {
+            String idItem = row['IdItem'];
+            String detailsName = row['DetailsName'] ?? '';
+            String detailValue = row['Details'] ?? '';
+
+            if (!groupedItems.containsKey(idItem)) {
+              groupedItems[idItem] = {
+                'IdItem': idItem,
+                'ItemName': row['ItemName'],
+                'ZoneName': row['ZoneName'],
+                'PlaceName': row['PlaceName'],
+                'DetailsList': <Map<String, String>>[],
+              };
+            }
+
+            if (detailsName.isNotEmpty) {
+              groupedItems[idItem]!['DetailsList'].add({
+                'DetailsName': detailsName,
+                'Details': detailValue,
+              });
+            }
           }
 
-          groupedItems[idItem]!['DetailsList'].add({
-            'DetailsName': detailsName,
-            'Details': detailValue,
-          });
+          items = groupedItems.values.toList();
         }
 
-        items = groupedItems.values.toList();
-        filteredItems = items!;
+        filteredItems = items ?? [];
+      } else if (response.statusCode == 404) {
+        items = [];
+        filteredItems = [];
+        errorMessage = 'No items found';
       } else {
         errorMessage = 'Failed to fetch data: ${response.statusCode}';
       }
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
+      items = [];
+      filteredItems = [];
     } finally {
       isLoading = false;
     }
@@ -117,15 +135,24 @@ class ItemsController {
   /// controller.filterItems('laptop', itemsList);
   /// ```
   void filterItems(String query, List<dynamic> items) {
+    if (query.isEmpty) {
+      filteredItems = items;
+      return;
+    }
+
     filteredItems = items.where((item) {
-      return item['IdItem'].toLowerCase().contains(query.toLowerCase()) ||
-          item['ItemName'].toLowerCase().contains(query.toLowerCase());
+      final idMatch =
+          item['IdItem']?.toLowerCase().contains(query.toLowerCase()) ?? false;
+      final nameMatch =
+          item['ItemName']?.toLowerCase().contains(query.toLowerCase()) ??
+              false;
+      return idMatch || nameMatch;
     }).toList();
   }
 
   /// Deletes an item from the database.
   ///
-  /// Sends a request to the API to permanently delete the specified item.
+  /// Sends a DELETE request to the API to permanently delete the specified item.
   /// Returns true if the deletion was successful, false otherwise.
   ///
   /// [idItem]: The unique identifier of the item to delete
@@ -133,26 +160,36 @@ class ItemsController {
   ///
   /// Example:
   /// ```dart
-  /// bool success = await controller.deleteItem('item123');
+  /// bool success = await controller.deleteItem('XLR3_01');
   /// if (success) {
   ///   // Item deleted successfully
   /// }
   /// ```
   Future<bool> deleteItem(String idItem) async {
     try {
-      var response = await http.post(
+      var response = await http.delete(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'I3', 'IdItem': idItem},
+            'https://services.interagit.com/API/roominventory/items/$idItem'),
+        headers: {'Content-Type': 'application/json'},
       );
 
-      if (response.statusCode == 200) {
-        var responseData = json.decode(response.body);
-        return responseData['status'] == 'success';
+      if (response.statusCode == 204) {
+        return true;
+      } else if (response.statusCode == 404) {
+        errorMessage = 'Item not found';
+        return false;
+      } else {
+        // Try to parse error message
+        try {
+          var responseData = json.decode(response.body);
+          errorMessage = responseData['error'] ?? 'Failed to delete item';
+        } catch (_) {
+          errorMessage = 'Failed to delete item (${response.statusCode})';
+        }
+        return false;
       }
-      return false;
     } catch (e) {
-      errorMessage = 'Exception: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     }
   }
@@ -177,7 +214,7 @@ class ItemsController {
   /// Example:
   /// ```dart
   /// try {
-  ///   await controller.saveAndShareQRCode('item123', 'Laptop');
+  ///   await controller.saveAndShareQRCode('XLR3_01', 'XLR Cable');
   /// } catch (e) {
   ///   print('Error sharing QR code: $e');
   /// }

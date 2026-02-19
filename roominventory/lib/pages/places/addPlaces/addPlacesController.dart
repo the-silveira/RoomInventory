@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 /// A controller class for managing the addition of new places to the inventory system.
 ///
@@ -75,9 +76,9 @@ class AddPlaceController {
   /// Performs form validation first, then sends a POST request to the backend API
   /// with the place data. Handles loading state and error management automatically.
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// Query Parameter: `query_param = 'P3'`
-  /// Form Data: `PlaceName = [entered name]`
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/places`
+  /// HTTP Method: POST with JSON body
+  /// JSON Body: `{"PlaceName": "[entered name]"}`
   ///
   /// Returns:
   /// - `Future<bool>`: `true` if the place was saved successfully
@@ -97,25 +98,43 @@ class AddPlaceController {
     if (!validateForm()) return false;
 
     isLoading = true;
+    errorMessage = '';
 
     try {
+      // Prepare JSON data
+      Map<String, dynamic> placeData = {
+        'PlaceName': nameController.text,
+      };
+
       final response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {
-          'query_param': 'P3',
-          'PlaceName': nameController.text,
-        },
+        Uri.parse('https://services.interagit.com/API/roominventory/places'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(placeData),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return true;
+      } else if (response.statusCode == 409) {
+        // Conflict - place might already exist
+        try {
+          final errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Place already exists';
+        } catch (_) {
+          errorMessage = 'Place already exists';
+        }
+        return false;
       } else {
-        errorMessage = 'Failed to save place: ${response.statusCode}';
+        // Try to parse error message
+        try {
+          final errorResponse = json.decode(response.body);
+          errorMessage = errorResponse['error'] ?? 'Failed to save place';
+        } catch (_) {
+          errorMessage = 'Failed to save place (${response.statusCode})';
+        }
         return false;
       }
     } catch (e) {
-      errorMessage = 'Error saving place: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     } finally {
       isLoading = false;

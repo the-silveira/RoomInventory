@@ -1,7 +1,7 @@
 name: roominventory
-description: "A new Flutter project."
+description: "RoomInventory is a cross-platform Flutter application for managing room inventories, including items, fixtures, DMX outputs, and event management. The project features Firebase authentication (including Google Sign-In), QR code generation and scanning, and a modern, responsive UI with Cupertino (iOS-style) widgets."
 publish_to: 'none'
-version: 0.1.0
+version: 1.1.0
 
 environment:
   sdk: '>=3.4.0 <4.0.0'

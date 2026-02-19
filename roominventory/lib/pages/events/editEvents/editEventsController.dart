@@ -97,7 +97,7 @@ class editEventsController {
   ///
   /// This method:
   /// 1. Sets the saving state to true and clears any previous errors
-  /// 2. Sends a POST request to the server with the updated event data
+  /// 2. Sends a PUT request to the server with the updated event data
   /// 3. Handles server responses and network errors
   /// 4. Returns true if the operation was successful, false otherwise
   ///
@@ -106,7 +106,7 @@ class editEventsController {
   ///
   /// Example:
   /// ```dart
-  /// bool success = await controller.saveChanges('event123');
+  /// bool success = await controller.saveChanges('VCCS_1');
   /// if (success) {
   ///   // Navigate back or show success message
   /// }
@@ -116,30 +116,37 @@ class editEventsController {
     errorMessage = '';
 
     try {
-      final response = await http.post(
+      // Prepare JSON data
+      Map<String, dynamic> eventData = {
+        'EventName': eventNameController.text,
+        'EventPlace': eventPlaceController.text,
+        'NameRep': nameRepController.text,
+        'EmailRep': emailRepController.text,
+        'TecExt': tecExtController.text,
+        'Date': dateController.text,
+      };
+
+      final response = await http.put(
         Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {
-          'query_param': 'E7',
-          'IdEvent': eventId,
-          'EventName': eventNameController.text,
-          'EventPlace': eventPlaceController.text,
-          'NameRep': nameRepController.text,
-          'EmailRep': emailRepController.text,
-          'TecExt': tecExtController.text,
-          'Date': dateController.text,
-        },
+            'https://services.interagit.com/API/roominventory/events/$eventId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(eventData),
       );
 
       if (response.statusCode == 200) {
-        final responseBody = json.decode(response.body);
-        return responseBody['status'] == 'success';
+        return true;
       } else {
-        errorMessage = 'Server error: ${response.statusCode}';
+        // Try to parse error message
+        try {
+          final responseBody = json.decode(response.body);
+          errorMessage = responseBody['error'] ?? 'Failed to update event';
+        } catch (_) {
+          errorMessage = 'Server error: ${response.statusCode}';
+        }
         return false;
       }
     } catch (e) {
-      errorMessage = 'Error: $e';
+      errorMessage = 'Connection error: $e';
       return false;
     } finally {
       isSaving = false;

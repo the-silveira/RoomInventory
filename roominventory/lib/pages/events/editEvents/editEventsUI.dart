@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:roominventory/globalWidgets/appbar/appbar.dart';
 import 'package:roominventory/pages/events/editEvents/editEventsWidgets.dart';
-import 'package:roominventory/pages/events/editEvents/editEvetsController.dart';
+import 'package:roominventory/pages/events/editEvents/editEventsController.dart';
 
 /// A page for editing existing event information.
 ///

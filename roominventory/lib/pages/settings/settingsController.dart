@@ -60,25 +60,25 @@ class SettingsController {
   /// Loads events from the remote API and processes them for calendar display.
   ///
   /// Performs the following operations:
-  /// 1. Sends POST request to the API endpoint with query parameter 'E1'
+  /// 1. Sends GET request to the API endpoint `/events`
   /// 2. Processes the JSON response into Event objects
   /// 3. Groups events by normalized date (time removed)
   /// 4. Updates the events map for calendar display
   ///
-  /// API Endpoint: `https://services.interagit.com/API/roominventory/api_ri.php`
-  /// Query Parameter: `query_param = 'E1'`
+  /// API Endpoint: `https://services.interagit.com/API/roominventory/events`
+  /// HTTP Method: GET
   ///
   /// Expected API Response Structure:
   /// ```json
   /// [
   ///   {
-  ///     "IdEvent": "1",
-  ///     "EventName": "Conference",
-  ///     "EventPlace": "Main Hall",
-  ///     "NameRep": "John Doe",
-  ///     "EmailRep": "john@example.com",
-  ///     "TecExt": "Microphone, Projector",
-  ///     "Date": "2024-01-15 14:00:00"
+  ///     "IdEvent": "VCCS_1",
+  ///     "EventName": "Vila do Conde Comedy Sessions",
+  ///     "EventPlace": "Auditório CCO",
+  ///     "NameRep": "Nuno Lacerda, Roberto Correia",
+  ///     "EmailRep": "-",
+  ///     "TecExt": "CCO",
+  ///     "Date": "2024-09-27"
   ///   }
   /// ]
   /// ```
@@ -98,34 +98,46 @@ class SettingsController {
   /// ```
   Future<void> loadEvents() async {
     try {
-      var response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/api_ri.php'),
-        body: {'query_param': 'E1'},
+      isLoading = true;
+
+      var response = await http.get(
+        Uri.parse('https://services.interagit.com/API/roominventory/events'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final dynamic eventsJson = json.decode(response.body);
 
-        events = {
-          for (var event in eventsJson)
-            _normalizeDate(DateTime.parse(event['Date'])): [
-              Event(
-                event['IdEvent'],
-                event['EventName'],
-                event['EventPlace'],
-                event['NameRep'],
-                event['EmailRep'],
-                event['TecExt'],
-                event['Date'],
-              )
-            ]
-        };
+        // Clear existing events
+        events.clear();
+
+        // Group events by date
+        for (var event in eventsJson) {
+          final date = _normalizeDate(DateTime.parse(event['Date']));
+          final eventObj = Event(
+            event['IdEvent'],
+            event['EventName'],
+            event['EventPlace'],
+            event['NameRep'],
+            event['EmailRep'],
+            event['TecExt'],
+            event['Date'],
+          );
+
+          if (!events.containsKey(date)) {
+            events[date] = [];
+          }
+          events[date]!.add(eventObj);
+        }
+      } else if (response.statusCode == 404) {
+        events = {};
       } else {
         throw Exception('Failed to fetch data: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Exception: $e');
+      throw Exception('Failed to load events: $e');
+    } finally {
+      isLoading = false;
     }
   }
 
@@ -266,8 +278,8 @@ class SettingsController {
         ..writeln('PRODID:-//Room Inventory//EN')
         ..writeln('CALSCALE:GREGORIAN');
 
-      events.forEach((date, events) {
-        for (final event in events) {
+      events.forEach((date, eventsList) {
+        for (final event in eventsList) {
           final startDate = DateTime.parse(event.Date).toUtc();
           final endDate = startDate.add(Duration(hours: 1));
           final now = DateTime.now().toUtc();

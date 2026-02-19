@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:roominventory/pages/events/editEvents/editEvetsController.dart';
+import 'package:roominventory/pages/events/editEvents/editEventsController.dart';
 
 /// A form widget for editing event details with Cupertino-style form fields.
 ///
