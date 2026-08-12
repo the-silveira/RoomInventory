@@ -7,109 +7,39 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:roominventory/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Controller class for managing inventory items operations and data.
-///
-/// This controller handles:
-/// - Fetching items data from the API with grouped details
-/// - Filtering and searching items
-/// - Deleting items from the database
-/// - Generating and sharing QR codes for items
-///
-/// The controller processes raw item data from the API and groups
-/// item details into a structured format for easier display and management.
-///
-/// Example usage:
-/// ```dart
-/// final controller = ItemsController();
-/// await controller.fetchData();
-/// ```
 class ItemsController {
-  /// List of all items fetched from the API with grouped details
-  List<dynamic>? items;
-
-  /// List of items filtered by search queries
-  List<dynamic> filteredItems = [];
-
-  /// Loading state indicator - true when data is being fetched
+  List? items;
+  List filteredItems = [];
   bool isLoading = true;
-
-  /// Error message for displaying operation failures
   String errorMessage = '';
 
-  /// Fetches items data from the API and processes it into a grouped format.
-  ///
-  /// This method:
-  /// 1. Sends a GET request to the items endpoint `/items`
-  /// 2. Processes the raw response to group item details by item ID
-  /// 3. Creates a structured format with item information and details list
-  /// 4. Handles HTTP errors and exceptions
-  /// 5. Updates loading state upon completion
-  ///
-  /// The grouped format includes:
-  /// - Item ID, name, zone, and place information
-  /// - List of detail maps with detail names and values
-  ///
-  /// Throws exceptions for network errors and invalid responses.
-  ///
-  /// Example:
-  /// ```dart
-  /// await controller.fetchData();
-  /// ```
-  Future<void> fetchData() async {
+  Future fetchData() async {
     try {
       isLoading = true;
       errorMessage = '';
 
-      var response = await http.get(
-        Uri.parse('https://services.interagit.com/API/roominventory/items'),
-        headers: {'Content-Type': 'application/json'},
-      );
+      final rawItems = await SupabaseService.getItems();
 
-      if (response.statusCode == 200) {
-        List<dynamic> rawItems = json.decode(response.body);
+      items = rawItems.map((row) {
+        final detailsList = (row['detailslist'] as List<dynamic>?) ?? [];
+        return {
+          'IdItem': row['iditem'],
+          'ItemName': row['itemname'],
+          'ZoneName': row['zonename'] ?? '',
+          'PlaceName': row['placename'] ?? '',
+          'DetailsList': detailsList
+              .map((d) => {
+                    'DetailsName': d['DetailsName'] ?? '',
+                    'Details': d['Details'] ?? '',
+                  })
+              .toList(),
+        };
+      }).toList();
 
-        // If the API returns grouped data directly, use it
-        if (rawItems.isNotEmpty && rawItems.first.containsKey('DetailsList')) {
-          items = rawItems;
-        } else {
-          // Otherwise, group the items (keep your existing grouping logic)
-          Map<String, Map<String, dynamic>> groupedItems = {};
-
-          for (var row in rawItems) {
-            String idItem = row['IdItem'];
-            String detailsName = row['DetailsName'] ?? '';
-            String detailValue = row['Details'] ?? '';
-
-            if (!groupedItems.containsKey(idItem)) {
-              groupedItems[idItem] = {
-                'IdItem': idItem,
-                'ItemName': row['ItemName'],
-                'ZoneName': row['ZoneName'],
-                'PlaceName': row['PlaceName'],
-                'DetailsList': <Map<String, String>>[],
-              };
-            }
-
-            if (detailsName.isNotEmpty) {
-              groupedItems[idItem]!['DetailsList'].add({
-                'DetailsName': detailsName,
-                'Details': detailValue,
-              });
-            }
-          }
-
-          items = groupedItems.values.toList();
-        }
-
-        filteredItems = items ?? [];
-      } else if (response.statusCode == 404) {
-        items = [];
-        filteredItems = [];
-        errorMessage = 'No items found';
-      } else {
-        errorMessage = 'Failed to fetch data: ${response.statusCode}';
-      }
+      filteredItems = items ?? [];
     } catch (e) {
       errorMessage = 'Connection error: $e';
       items = [];
@@ -119,27 +49,11 @@ class ItemsController {
     }
   }
 
-  /// Filters items based on a search query.
-  ///
-  /// This method filters the items list by matching the query against:
-  /// - Item ID (IdItem)
-  /// - Item name (ItemName)
-  ///
-  /// The search is case-insensitive and updates the filteredItems list.
-  ///
-  /// [query]: The search string to filter items by
-  /// [items]: The list of items to filter (typically the main items list)
-  ///
-  /// Example:
-  /// ```dart
-  /// controller.filterItems('laptop', itemsList);
-  /// ```
-  void filterItems(String query, List<dynamic> items) {
+  void filterItems(String query, List items) {
     if (query.isEmpty) {
       filteredItems = items;
       return;
     }
-
     filteredItems = items.where((item) {
       final idMatch =
           item['IdItem']?.toLowerCase().contains(query.toLowerCase()) ?? false;
@@ -150,82 +64,40 @@ class ItemsController {
     }).toList();
   }
 
-  /// Deletes an item from the database.
-  ///
-  /// Sends a DELETE request to the API to permanently delete the specified item.
-  /// Returns true if the deletion was successful, false otherwise.
-  ///
-  /// [idItem]: The unique identifier of the item to delete
-  /// Returns: [bool] indicating success (true) or failure (false)
-  ///
-  /// Example:
-  /// ```dart
-  /// bool success = await controller.deleteItem('XLR3_01');
-  /// if (success) {
-  ///   // Item deleted successfully
-  /// }
-  /// ```
   Future<bool> deleteItem(String idItem) async {
-    try {
-      var response = await http.delete(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/items/$idItem'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 204) {
-        return true;
-      } else if (response.statusCode == 404) {
-        errorMessage = 'Item not found';
-        return false;
-      } else {
-        // Try to parse error message
-        try {
-          var responseData = json.decode(response.body);
-          errorMessage = responseData['error'] ?? 'Failed to delete item';
-        } catch (_) {
-          errorMessage = 'Failed to delete item (${response.statusCode})';
-        }
-        return false;
-      }
-    } catch (e) {
-      errorMessage = 'Connection error: $e';
+    if (idItem.isEmpty) {
+      errorMessage = 'ID do item inválido';
       return false;
+    }
+
+    try {
+      isLoading = true;
+
+      await SupabaseService.deleteItem(idItem);
+
+      // Atualiza as listas locais para refletir na UI
+      items?.removeWhere((item) => item['IdItem'] == idItem);
+      filteredItems.removeWhere((item) => item['IdItem'] == idItem);
+
+      errorMessage = '';
+      return true;
+    } on PostgrestException catch (e) {
+      // Erro específico do Supabase/PostgreSQL
+      errorMessage = 'Erro na base de dados: ${e.message}';
+      return false;
+    } catch (e) {
+      errorMessage = 'Erro ao eliminar: $e';
+      return false;
+    } finally {
+      isLoading = false;
     }
   }
 
-  /// Generates a QR code for an item and shares it via the device's share sheet.
-  ///
-  /// This method:
-  /// 1. Creates a custom QR code image with the item ID and branding
-  /// 2. Saves the image to a temporary file
-  /// 3. Opens the device's share sheet to allow saving or sharing the QR code
-  /// 4. Cleans up the temporary file after sharing
-  ///
-  /// The QR code includes:
-  /// - A white background with border
-  /// - The QR code itself (encoding the item ID)
-  /// - The item ID displayed below the QR code
-  ///
-  /// [itemId]: The unique identifier of the item to generate QR code for
-  /// [itemName]: The name of the item (used in share text)
-  /// Throws: Exception if QR code generation or sharing fails
-  ///
-  /// Example:
-  /// ```dart
-  /// try {
-  ///   await controller.saveAndShareQRCode('XLR3_01', 'XLR Cable');
-  /// } catch (e) {
-  ///   print('Error sharing QR code: $e');
-  /// }
-  /// ```
-  Future<void> saveAndShareQRCode(String itemId, String itemName) async {
+  Future saveAndShareQRCode(String itemId, String itemName) async {
     try {
-      // Create a picture recorder to draw the custom UI
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder, Rect.fromLTRB(0, 0, 300, 350));
 
-      // Draw white background with border
       final paint = Paint()
         ..color = CupertinoColors.white
         ..style = PaintingStyle.fill;
@@ -235,7 +107,6 @@ class ItemsController {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
 
-      // Draw background rectangle
       final backgroundRect = Rect.fromLTWH(16, 16, 268, 318);
       canvas.drawRRect(
         RRect.fromRectAndRadius(backgroundRect, Radius.circular(16)),
@@ -246,20 +117,17 @@ class ItemsController {
         borderPaint,
       );
 
-      // Draw QR code
       final qrPainter = QrPainter(
         data: itemId,
         version: QrVersions.auto,
         errorCorrectionLevel: QrErrorCorrectLevel.L,
       );
 
-      // Position the QR code
       canvas.save();
       canvas.translate(50, 50);
       qrPainter.paint(canvas, Size(200, 200));
       canvas.restore();
 
-      // Draw ID text
       final textStyle = ui.TextStyle(
         color: CupertinoColors.black,
         fontSize: 16,
@@ -270,14 +138,13 @@ class ItemsController {
         textAlign: TextAlign.center,
       ))
         ..pushStyle(textStyle)
-        ..addText('ID: $itemId');
+        ..addText('ID: ' + itemId);
 
       final paragraph = paragraphBuilder.build()
         ..layout(ui.ParagraphConstraints(width: 268));
 
       canvas.drawParagraph(paragraph, Offset(16, 275));
 
-      // Convert to image
       final picture = recorder.endRecording();
       final image = await picture.toImage(300, 350);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -288,20 +155,16 @@ class ItemsController {
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();
 
-      // Save to temporary directory
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/qr_code_$itemId.png');
+      final tempFile = File(tempDir.path + '/qr_code_' + itemId + '.png');
       await tempFile.writeAsBytes(pngBytes);
 
-      // Use share to let user choose where to save
-      // ignore: deprecated_member_use
       await Share.shareXFiles(
         [XFile(tempFile.path)],
-        text: 'QR Code for Item $itemName',
+        text: 'QR Code for Item ' + itemName,
         subject: 'QR Code',
       );
 
-      // Clean up
       await tempFile.delete();
     } catch (e) {
       throw Exception('Error sharing QR code: $e');

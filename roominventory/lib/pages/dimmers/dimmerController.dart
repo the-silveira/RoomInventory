@@ -1,122 +1,91 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
+import 'package:flutter/cupertino.dart';
+import 'package:roominventory/services/supabase_service.dart';
 import '../../classes/connectionState.dart';
 import '../../classes/dmxChannel.dart';
 
-/// Controller class for managing DMX configuration and connections.
-///
-/// This class handles loading DMX channels from an API, managing connection states,
-/// and saving configurations back to the server. It manages two distinct areas:
-/// - First area with lettered rows (A-E) and 12 columns
-/// - Second area with numbered rows (1-2) and 12 columns
 class DMXConfigController {
-  /// Configuration constants for the first area (FX channels)
   static const firstAreaRows = ['A', 'B', 'C', 'D', 'E'];
-
-  /// Number of columns in the first area
   static const firstAreaCols = 12;
-
-  /// Configuration constants for the second area (DMX channels)
   static const secondAreaRows = 2;
-
-  /// Number of columns in the second area
   static const secondAreaCols = 12;
-
-  /// Row labels for the second area
   static const secondAreaRowLabels = ['1', '2'];
 
-  /// List of DMX channels loaded from the API
-  List<DMXChannel> channels = [];
-
-  /// Map of active connections between first and second area channels
-  ///
-  /// Keys are in format 'first_[row]_[col]', values are in format 'second_[row]_[col]'
-  final Map<String, String> connections = {};
-
-  /// Temporary storage for the starting point of a connection being created
+  List channels = [];
+  final Map connections = {};
   String? connectingFrom;
 
-  /// 2D list representing connection states for the first area
-  ///
-  /// Dimensions: [firstAreaRows.length] x [firstAreaCols]
-  List<List<ConnectionState>> firstAreaStates = List.generate(
+  List<List<connectionState>> firstAreaStates = List.generate(
     firstAreaRows.length,
-    (_) => List.filled(firstAreaCols, ConnectionState.disconnected),
+    (_) => List.filled(firstAreaCols, connectionState.disconnected),
   );
 
-  /// 2D list representing connection states for the second area
-  ///
-  /// Dimensions: [secondAreaRows] x [secondAreaCols]
-  List<List<ConnectionState>> secondAreaStates = List.generate(
+  List<List<connectionState>> secondAreaStates = List.generate(
     secondAreaRows,
-    (_) => List.filled(secondAreaCols, ConnectionState.disconnected),
+    (_) => List.filled(secondAreaCols, connectionState.disconnected),
   );
 
-  /// Loading state indicator
   bool isLoading = true;
-
-  /// Error message for any operation failures
   String errorMessage = '';
 
-  /// Loads DMX channels from the API endpoint.
-  ///
-  /// Makes a GET request to retrieve channel data and updates internal state
-  /// based on the response. Handles both successful and failed responses.
-  ///
-  /// Throws:
-  ///   - HttpException if the API request fails
-  ///   - FormatException if the response JSON is malformed
   Future<void> loadChannels() async {
     try {
       isLoading = true;
       errorMessage = '';
 
-      final response = await http.get(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/channels/with-connections'),
-        headers: {'Content-Type': 'application/json'},
-      );
+      final channelsJson = await SupabaseService.getChannelsWithConnections();
+      debugPrint('DMX Raw data count: ${channelsJson.length}');
 
-      if (response.statusCode == 200) {
-        final decodedBody = utf8.decode(response.bodyBytes);
-        final channelsJson = json.decode(decodedBody) as List;
+      channels = [];
 
-        channels =
-            channelsJson.map((json) => DMXChannel.fromJson(json)).toList();
-        _updateChannelStates();
-      } else if (response.statusCode == 404) {
-        channels = [];
-        errorMessage = 'No channels found';
-      } else {
-        errorMessage = 'Failed to load channels: ${response.statusCode}';
+      for (var i = 0; i < channelsJson.length; i++) {
+        final json = channelsJson[i];
+
+        if (json['idchannel'] == null) {
+          debugPrint('DMX Skip [$i]: null idchannel');
+          continue;
+        }
+
+        final position = json['position'];
+        if (position == null ||
+            position.toString() == 'null' ||
+            position.toString().isEmpty) {
+          debugPrint('DMX Skip [$i]: invalid position');
+          continue;
+        }
+
+        try {
+          final channel = DMXChannel.fromJson(json);
+          channels.add(channel);
+        } catch (e, stack) {
+          debugPrint('DMX Error parsing channel [$i]: $e');
+          debugPrint('$stack');
+        }
       }
-    } catch (e) {
+
+      debugPrint('DMX Valid channels loaded: ${channels.length}');
+      _updateChannelStates();
+    } catch (e, stack) {
       errorMessage = 'Connection error: $e';
+      debugPrint('DMX load error: $e');
+      debugPrint('$stack');
       channels = [];
     } finally {
       isLoading = false;
     }
   }
 
-  /// Saves the current configuration to the API.
-  ///
-  /// Updates channel states from the UI, prepares the payload, and sends it
-  /// to the server. Returns true if the operation was successful.
-  ///
-  /// Returns:
-  ///   - `true` if the configuration was saved successfully
-  ///   - `false` if the operation failed
   Future<bool> saveConfiguration() async {
     try {
-      // Update channel states from UI
       for (final channel in channels) {
-        final parts = channel.position.split('_');
+        final parts = channel.position?.toString().split('_') ?? [];
         if (parts.length < 2) continue;
 
         if (parts[0] == 'FX' && parts[1].length >= 2) {
           final rowLetter = parts[1][0];
-          final colNumber = int.tryParse(parts[1].substring(1)) ?? 0;
+          final colStr = parts[1].substring(1);
+          if (colStr == 'null') continue;
+
+          final colNumber = int.tryParse(colStr) ?? 0;
           final rowIndex = firstAreaRows.indexOf(rowLetter);
 
           if (rowIndex >= 0 && colNumber >= 1 && colNumber <= firstAreaCols) {
@@ -128,8 +97,12 @@ class DMXConfigController {
         } else if (parts[0] == 'DMX') {
           final dmxParts = parts[1].split('_');
           if (dmxParts.length == 2) {
-            final rowNumber = int.tryParse(dmxParts[0].substring(1)) ?? 0;
-            final colNumber = int.tryParse(dmxParts[1]) ?? 0;
+            final rowStr = dmxParts[0].substring(1);
+            final colStr = dmxParts[1];
+            if (rowStr == 'null' || colStr == 'null') continue;
+
+            final rowNumber = int.tryParse(rowStr) ?? 0;
+            final colNumber = int.tryParse(colStr) ?? 0;
 
             if (rowNumber >= 1 &&
                 rowNumber <= secondAreaRows &&
@@ -159,127 +132,100 @@ class DMXConfigController {
         ],
       };
 
-      // Send to API
-      final response = await http.post(
-        Uri.parse(
-            'https://services.interagit.com/API/roominventory/channels/save'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(payload),
-      );
-
-      // Handle response
-      if (response.statusCode == 200) {
-        final result = json.decode(response.body);
-        return result['success'] == true;
-      } else {
-        // Try to parse error message
-        try {
-          final result = json.decode(response.body);
-          errorMessage =
-              result['error'] ?? 'Server error: ${response.statusCode}';
-        } catch (_) {
-          errorMessage = 'Server error: ${response.statusCode}';
-        }
-        return false;
-      }
-    } catch (e) {
+      return await SupabaseService.saveChannelsConfig(payload);
+    } catch (e, stack) {
       errorMessage = 'Failed to save: $e';
+      debugPrint('DMX save error: $e');
+      debugPrint('$stack');
       return false;
     }
   }
 
-  /// Converts a UI key to the corresponding channel ID.
-  ///
-  /// Parses keys in the format 'first_[row]_[col]' or 'second_[row]_[col]'
-  /// and finds the matching channel ID from the loaded channels list.
-  ///
-  /// Parameters:
-  ///   - `key`: The UI key to convert (e.g., 'first_A_1', 'second_1_5')
-  ///
-  /// Returns:
-  ///   - The channel ID as an integer
-  ///
-  /// Throws:
-  ///   - FormatException if the key format is invalid
-  ///   - Exception if no matching channel is found
   int _getChannelIdFromKey(String key) {
-    try {
-      final parts = key.split('_');
-      if (parts.length < 3) throw FormatException('Invalid key format: $key');
+    final parts = key.split('_');
+    if (parts.length < 3) throw FormatException('Invalid key format: $key');
 
-      if (parts[0] == 'first') {
-        final position = 'FX_${parts[1]}${parts[2]}';
-        return channels
-            .firstWhere((c) => c.position == position,
-                orElse: () => throw Exception('Channel $position not found'))
-            .id;
-      } else if (parts[0] == 'second') {
-        final position = 'DMX_R${parts[1]}_${parts[2]}';
-        return channels
-            .firstWhere((c) => c.position == position,
-                orElse: () => throw Exception('Channel $position not found'))
-            .id;
-      }
-      throw FormatException('Unknown key type: $key');
-    } catch (e) {
-      rethrow;
+    if (parts[0] == 'first') {
+      final position = 'FX_${parts[1]}${parts[2]}';
+      return channels
+          .firstWhere((c) => c.position == position,
+              orElse: () => throw Exception('Channel $position not found'))
+          .id;
+    } else if (parts[0] == 'second') {
+      final position = 'DMX_R${parts[1]}_${parts[2]}';
+      return channels
+          .firstWhere((c) => c.position == position,
+              orElse: () => throw Exception('Channel $position not found'))
+          .id;
     }
+    throw FormatException('Unknown key type: $key');
   }
 
-  /// Updates internal state from loaded channel data.
-  ///
-  /// Resets all states and repopulates them based on the current channel data,
-  /// including parsing existing connections from the server response.
   void _updateChannelStates() {
-    // Reset all states
     firstAreaStates = List.generate(
       firstAreaRows.length,
-      (_) => List.filled(firstAreaCols, ConnectionState.disconnected),
+      (_) => List.filled(firstAreaCols, connectionState.disconnected),
     );
     secondAreaStates = List.generate(
       secondAreaRows,
-      (_) => List.filled(secondAreaCols, ConnectionState.disconnected),
+      (_) => List.filled(secondAreaCols, connectionState.disconnected),
     );
     connections.clear();
 
-    // Update from loaded channels
     for (final channel in channels) {
-      final parts = channel.position.split('_');
+      final position = channel.position?.toString() ?? '';
+      final stateStr = channel.state?.toString() ?? '';
+      final connStr = channel.connections?.toString() ?? '';
+
+      if (position.isEmpty || position == 'null') continue;
+
+      final parts = position.split('_');
       if (parts.length < 2) continue;
 
       if (parts[0] == 'FX' && parts[1].length >= 2) {
         final rowLetter = parts[1][0];
-        final colNumber = int.tryParse(parts[1].substring(1)) ?? 0;
+        final colStr = parts[1].substring(1);
+        if (colStr == 'null') continue;
+
+        final colNumber = int.tryParse(colStr) ?? 0;
         final rowIndex = firstAreaRows.indexOf(rowLetter);
 
         if (rowIndex >= 0 && colNumber >= 1 && colNumber <= firstAreaCols) {
-          firstAreaStates[rowIndex][colNumber - 1] = _parseState(channel.state);
+          firstAreaStates[rowIndex][colNumber - 1] = _parseState(stateStr);
         }
       } else if (parts[0] == 'DMX') {
         final dmxParts = parts[1].split('_');
         if (dmxParts.length == 2) {
-          final rowNumber = int.tryParse(dmxParts[0].substring(1)) ?? 0;
-          final colNumber = int.tryParse(dmxParts[1]) ?? 0;
+          final rowStr = dmxParts[0].substring(1);
+          final colStr = dmxParts[1];
+          if (rowStr == 'null' || colStr == 'null') continue;
+
+          final rowNumber = int.tryParse(rowStr) ?? 0;
+          final colNumber = int.tryParse(colStr) ?? 0;
 
           if (rowNumber >= 1 &&
               rowNumber <= secondAreaRows &&
               colNumber >= 1 &&
               colNumber <= secondAreaCols) {
             secondAreaStates[rowNumber - 1][colNumber - 1] =
-                _parseState(channel.state);
+                _parseState(stateStr);
           }
         }
       }
 
-      if (channel.connections.isNotEmpty) {
-        final connParts = channel.connections.split('→');
+      if (connStr.isNotEmpty && connStr != 'null') {
+        final connParts = connStr.split('→');
         if (connParts.length == 2) {
           if (connParts[1].startsWith('DMX_R')) {
             final fx = connParts[0].replaceAll("FX_", "");
             final dmx = connParts[1].replaceAll("DMX_R", "");
+            if (fx.isEmpty || dmx.isEmpty) continue;
+
             final fxRow = fx[0];
             final fxCol = fx.substring(1);
             final dmxParts = dmx.split('_');
+            if (dmxParts.length < 2) continue;
+
             final dmxRow = dmxParts[0];
             final dmxCol = dmxParts[1];
             final source = 'first_${fxRow}_$fxCol';
@@ -291,72 +237,82 @@ class DMXConfigController {
     }
   }
 
-  /// Parses a string state into a ConnectionState enum value.
-  ///
-  /// Parameters:
-  ///   - `state`: The string representation of the state
-  ///
-  /// Returns:
-  ///   - ConnectionState.connected for 'connected'
-  ///   - ConnectionState.broken for 'broken'
-  ///   - ConnectionState.disconnected for any other value
-  ConnectionState _parseState(String state) {
+  connectionState _parseState(String state) {
     switch (state.toLowerCase()) {
       case 'connected':
-        return ConnectionState.connected;
+        return connectionState.connected;
       case 'broken':
-        return ConnectionState.broken;
+        return connectionState.broken;
       default:
-        return ConnectionState.disconnected;
+        return connectionState.disconnected;
     }
   }
 
-  /// Handles tap events on the first area grid.
-  ///
-  /// Manages state toggling and connection initiation for FX channels.
-  ///
-  /// Parameters:
-  ///   - `row`: The row index (0-based) of the tapped cell
-  ///   - `col`: The column index (0-based) of the tapped cell
   void handleFirstAreaTap(int row, int col) {
     final key = 'first_${firstAreaRows[row]}_${col + 1}';
 
     if (connectingFrom != null) {
+      if (connectingFrom == key) {
+        connectingFrom = null;
+        return;
+      }
+
+      // Se a origem é do second area, faz a conexão
+      if (connectingFrom!.startsWith('second_')) {
+        final sourceKey = key;
+        final targetKey = connectingFrom!;
+
+        final sParts = sourceKey.split('_');
+        final sRow = firstAreaRows.indexOf(sParts[1]);
+        final sCol = int.parse(sParts[2]) - 1;
+        firstAreaStates[sRow][sCol] = connectionState.connected;
+
+        final tParts = targetKey.split('_');
+        final tRow = int.parse(tParts[1]) - 1;
+        final tCol = int.parse(tParts[2]) - 1;
+        secondAreaStates[tRow][tCol] = connectionState.connected;
+
+        connections[sourceKey] = targetKey;
+        connectingFrom = null;
+        return;
+      }
+
       connectingFrom = null;
       return;
     }
 
     if (connections.containsKey(key)) {
       connections.remove(key);
-      firstAreaStates[row][col] = ConnectionState.disconnected;
+      firstAreaStates[row][col] = connectionState.disconnected;
     } else {
       firstAreaStates[row][col] =
-          firstAreaStates[row][col] == ConnectionState.disconnected
-              ? ConnectionState.broken
-              : ConnectionState.disconnected;
+          firstAreaStates[row][col] == connectionState.disconnected
+              ? connectionState.broken
+              : connectionState.disconnected;
     }
   }
 
-  /// Handles tap events on the second area grid.
-  ///
-  /// Manages state toggling, connection completion, and connection removal
-  /// for DMX channels.
-  ///
-  /// Parameters:
-  ///   - `row`: The row index (0-based) of the tapped cell
-  ///   - `col`: The column index (0-based) of the tapped cell
   void handleSecondAreaTap(int row, int col) {
     final key = 'second_${row + 1}_${col + 1}';
 
     if (connectingFrom != null) {
+      if (connectingFrom == key) {
+        connectingFrom = null;
+        return;
+      }
+
+      // Se a origem é do first area, faz a conexão
       if (connectingFrom!.startsWith('first_')) {
         final sourceParts = connectingFrom!.split('_');
         final sourceRow = firstAreaRows.indexOf(sourceParts[1]);
         final sourceCol = int.parse(sourceParts[2]) - 1;
-        firstAreaStates[sourceRow][sourceCol] = ConnectionState.connected;
-        secondAreaStates[row][col] = ConnectionState.connected;
+        firstAreaStates[sourceRow][sourceCol] = connectionState.connected;
+        secondAreaStates[row][col] = connectionState.connected;
         connections[connectingFrom!] = key;
+        connectingFrom = null;
+        return;
       }
+
       connectingFrom = null;
       return;
     }
@@ -366,28 +322,31 @@ class DMXConfigController {
       final sourceParts = toRemove.key.split('_');
       final sourceRow = firstAreaRows.indexOf(sourceParts[1]);
       final sourceCol = int.parse(sourceParts[2]) - 1;
-      firstAreaStates[sourceRow][sourceCol] = ConnectionState.disconnected;
+      firstAreaStates[sourceRow][sourceCol] = connectionState.disconnected;
       connections.remove(toRemove.key);
-      secondAreaStates[row][col] = ConnectionState.disconnected;
+      secondAreaStates[row][col] = connectionState.disconnected;
     } else {
       secondAreaStates[row][col] =
-          secondAreaStates[row][col] == ConnectionState.disconnected
-              ? ConnectionState.broken
-              : ConnectionState.disconnected;
+          secondAreaStates[row][col] == connectionState.disconnected
+              ? connectionState.broken
+              : connectionState.disconnected;
     }
   }
 
-  /// Initiates a connection process from a specific cell.
-  ///
-  /// Stores the starting point for a connection that will be completed
-  /// when the user taps a target cell.
-  ///
-  /// Parameters:
-  ///   - `key`: The UI key of the starting cell
-  ///   - `row`: The row index of the starting cell
-  ///   - `col`: The column index of the starting cell
   void startConnectionProcess(String key, int row, int col) {
-    if (firstAreaStates[row][col] == ConnectionState.broken) return;
+    if (connectingFrom == key) {
+      connectingFrom = null;
+      return;
+    }
+
+    final area = key.split('_')[0];
+    if (area == 'first') {
+      if (firstAreaStates[row][col] == connectionState.broken) return;
+      if (connections.containsKey(key)) return;
+    } else {
+      if (secondAreaStates[row][col] == connectionState.broken) return;
+      if (connections.containsValue(key)) return;
+    }
     connectingFrom = key;
   }
 }

@@ -69,13 +69,13 @@ class EventSearchBar extends StatelessWidget {
 /// ```
 class EventListTile extends StatelessWidget {
   /// The event data to display, expected to contain:
-  /// - EventName
-  /// - EventPlace
-  /// - NameRep
-  /// - EmailRep
-  /// - TecExt
-  /// - Date
-  /// - IdEvent
+  /// - eventname
+  /// - eventplace
+  /// - namerep
+  /// - emailrep
+  /// - tecext
+  /// - date
+  /// - idevent
   final dynamic event;
 
   /// Controller for handling event operations and status determination
@@ -105,12 +105,12 @@ class EventListTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  event['EventName'].toString().isEmpty
+                  event['eventname'].toString().isEmpty
                       ? 'Empty Name'
-                      : event['EventName'].toString().length > 35
-                          ? event['EventName'].toString().substring(0, 35) +
+                      : event['eventname'].toString().length > 35
+                          ? event['eventname'].toString().substring(0, 35) +
                               "..."
-                          : event['EventName'],
+                          : event['eventname'],
                   style: TextStyle(
                     fontSize: 16,
                     color: Theme.of(context).colorScheme.onSurface,
@@ -118,7 +118,7 @@ class EventListTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                controller.getCardIcon(event['Date']),
+                controller.getCardIcon(event['date']),
                 color: Theme.of(context).colorScheme.primary,
               ),
             ],
@@ -129,7 +129,7 @@ class EventListTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "📍 ${event['EventPlace']}",
+                  "📍 ${event['eventplace']}",
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -137,7 +137,7 @@ class EventListTile extends StatelessWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "👤 ${event['NameRep']}",
+                  "👤 ${event['namerep']}",
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -145,7 +145,7 @@ class EventListTile extends StatelessWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "📧 ${event['EmailRep']}",
+                  "📧 ${event['emailrep']}",
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -153,7 +153,7 @@ class EventListTile extends StatelessWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "🛠 ${event['TecExt']}",
+                  "🛠 ${event['tecext']}",
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -161,7 +161,7 @@ class EventListTile extends StatelessWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "📅 Date: ${event['Date']}",
+                  "📅 date: ${event['date']}",
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -169,7 +169,7 @@ class EventListTile extends StatelessWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "ID: ${event['IdEvent']}",
+                  "ID: ${event['idevent']}",
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
@@ -178,7 +178,7 @@ class EventListTile extends StatelessWidget {
               ],
             ),
           ),
-          onTap: () => controller.navigateToDetails(context, event['IdEvent']),
+          onTap: () => controller.navigateToDetails(context, event['idevent']),
         ),
       ],
     );

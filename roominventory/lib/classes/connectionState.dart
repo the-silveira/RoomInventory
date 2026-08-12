@@ -19,7 +19,7 @@
 /// The connection states are used throughout the DMX configuration system
 /// to visually represent and manage the connections between stage fixtures
 /// and DMX output channels.
-enum ConnectionState {
+enum connectionState {
   /// The channel is not connected to any DMX output.
   ///
   /// This state indicates that the fixture is available for connection

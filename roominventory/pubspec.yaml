@@ -1,7 +1,7 @@
 name: roominventory
-description: "RoomInventory is a cross-platform Flutter application for managing room inventories, including items, fixtures, DMX outputs, and event management. The project features Firebase authentication (including Google Sign-In), QR code generation and scanning, and a modern, responsive UI with Cupertino (iOS-style) widgets."
+description: "RoomInventory is a cross-platform Flutter application for managing room inventories, including items, fixtures, DMX outputs, and event management. The project features Supabase authentication (including Google Sign-In), QR code generation and scanning, and a modern, responsive UI with Cupertino (iOS-style) widgets."
 publish_to: 'none'
-version: 1.1.0
+version: 2.0.0
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -9,20 +9,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6  # Add this line for Cupertino icons
+  cupertino_icons: ^1.0.6
   http: ^1.3.0
-
   shared_preferences: ^2.3.3
   provider: ^6.1.2
   uuid: ^4.5.1
-  firebase_core: ^3.13.0
-  firebase_auth: ^5.5.2
+  supabase_flutter: ^2.8.0
   google_sign_in: ^6.3.0
-  
   path_provider: ^2.0.14
   permission_handler: ^12.0.1
   file_saver: ^0.3.1
-  icalendar: ^0.1.3
+  intl: ^0.19.0
   table_calendar: ^3.0.9
   image_picker: ^1.0.4
   qr_flutter: ^4.1.0
